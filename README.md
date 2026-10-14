@@ -34,12 +34,66 @@ failure and boots on seeded in-memory state instead of crashing.
 
 Node 18+. **No runtime dependencies.** Sign in with any `name@usc.edu`. In local
 development the code is `482913` and the sign-in dialog shows it; with
-`NODE_ENV=production` the fixed code is ignored, a random code is issued and it
+`NODE_ENV=production` (outside Vercel) the fixed code is ignored, a random code is issued and it
 is never returned by the API (a mailer still has to be attached, see TODOs). The ML pipeline needs Python
 only when you actually train — the marketplace itself never does.
 
 Admin dashboard at `/admin.html` — set `TM_ADMINS=you@usc.edu` first, sign in,
 paste your token.
+
+### Deploy to Vercel
+
+`npm start` (local, Render or any long-running host) is unchanged. On Vercel the
+same code runs as one serverless function:
+
+- `public/` is served as static files by Vercel.
+- Every `/api/*` request is rewritten (`vercel.json`) to `api/index.js`, which
+  calls the same router and handlers as `server/index.js`.
+- `.vercelignore` drops `ml/`, `docs/` and `tests/`, so the Python training
+  code is not mistaken for a Python app.
+
+Steps:
+
+1. In Vercel, **Add New → Project** and import the repository.
+2. **Framework Preset: Other**. Leave **Root Directory** empty (the repository
+   root, or `trojan-market` if this folder sits inside a larger repository).
+   Leave the build command empty; `vercel.json` sets the output directory to
+   `public`.
+3. Add environment variables:
+
+   | Variable | Value | Why |
+   | --- | --- | --- |
+   | `TM_DEMO_CODE` | `482913` | Demo sign-in code. Vercel runs with `NODE_ENV=production`, so the code is only enabled when this is set. |
+   | `TM_SIMULATED_ID` | `true` | Simulated digital ID verification, so the demo can post listings. |
+   | `TM_SESSION_SECRET` | a long random string, e.g. `openssl rand -hex 32` | Signs session tokens. Without it a random per-instance key is used and a warning is logged, so sign-ins do not carry across instances. |
+   | `TM_MONGO_URI` | optional, e.g. a free MongoDB Atlas URI | Persistent shared data (see below). |
+
+   Do not set `NODE_ENV` yourself.
+4. Deploy.
+
+What to expect:
+
+- **Without `TM_MONGO_URI`** the data lives in `/tmp` of each function
+  instance. Every cold start begins from the seeded demo data, and different
+  instances do not share listings, threads or messages, so the demo data can
+  reset at any time.
+- **Sign-in still survives across instances.** Session tokens are HMAC-signed
+  and carry the email, display name, expiry and, once earned, the digital ID
+  badge, so any instance can verify them and the server still refuses to post
+  for a token without the badge (403). The token is re-issued when the name or
+  the badge changes. Signing out revokes the token only on the instance that
+  handled the request.
+- **With a MongoDB Atlas URI** (the free tier is enough) all application state
+  is shared and persists. Each request re-reads the state and writes back only
+  the documents it changed; the connection is reused across invocations of a
+  warm instance. In Atlas, allow access from `0.0.0.0/0` (Vercel has no fixed
+  egress IPs) and use a URI like
+  `mongodb+srv://user:pass@cluster0.example.mongodb.net/?retryWrites=true&w=majority`.
+- **Realtime:** `/api/stream` (server-sent events) is not available on Vercel;
+  the page detects this and refreshes listings and messages every few seconds.
+- **Background jobs** do not run on a timer; due jobs run at the start of a
+  request instead.
+- The behavioural event log is written to `/tmp` and is not durable on Vercel.
 
 ---
 
@@ -399,7 +453,9 @@ See `.env.example`. Everything has a safe default; ML is off.
 Key variables: `TM_ADMINS`, `TM_MONGO_URI`, `TM_ML_ENABLED`, `TM_ML_URL`,
 `TM_ML_WEIGHT`, `TM_EXPLORE`, the six `TM_GATE_*` thresholds, and for
 identity `CREDENCE_BASE_URL`, `CREDENCE_LICENSE_KEY`, `CREDENCE_PROFILE_ID`,
-`PUBLIC_ORIGIN`, `TM_SIMULATED_ID`, `NODE_ENV`.
+`PUBLIC_ORIGIN`, `TM_SIMULATED_ID`, `NODE_ENV`. For Vercel: `TM_DEMO_CODE`,
+`TM_SESSION_SECRET` and optionally `TM_STATELESS_SESSIONS` (on by default on
+Vercel, off elsewhere).
 
 ---
 

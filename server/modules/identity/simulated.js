@@ -53,17 +53,30 @@ function createSimulatedAdapter(opts) {
   const now = o.now || Date.now;
   const qrDelayMs = o.qrDelayMs === undefined ? 4000 : o.qrDelayMs;
   const sessions = new Map();
+  /* With a codec ({ encode, decode }) the session state travels inside the id
+     itself, so a different serverless instance can finish the flow. */
+  const codec = o.codec || null;
+  const used = new Set();
 
   function open(kind, args) {
-    const id = 'sim_' + crypto.randomBytes(12).toString('hex');
     const scenario = SCENARIOS[args && args.scenario] ? args.scenario : 'success';
-    sessions.set(id, { kind: kind, flow: args.flow, scenario: scenario, holderName: args.holderName, created: now() });
+    const state = { kind: kind, flow: args.flow, scenario: scenario, holderName: args.holderName, created: now() };
+    if (codec) return 'sim_' + codec.encode(state);
+    const id = 'sim_' + crypto.randomBytes(12).toString('hex');
+    sessions.set(id, state);
     return id;
   }
 
+  function peek(id) {
+    if (!codec) return sessions.get(id);
+    if (used.has(id)) return null;
+    return codec.decode(String(id || '').replace(/^sim_/, ''));
+  }
+
   function take(id) {
-    const s = sessions.get(id);
-    if (s) sessions.delete(id);
+    const s = peek(id);
+    if (s && codec) used.add(id);
+    else if (s) sessions.delete(id);
     return s;
   }
 
@@ -94,7 +107,7 @@ function createSimulatedAdapter(opts) {
     },
 
     async pollQr(args) {
-      const s = sessions.get(args.sessionId);
+      const s = peek(args.sessionId);
       if (!s || s.kind !== 'qr') return { status: 'failed', reason: 'SESSION_NOT_FOUND' };
       if (now() - s.created < qrDelayMs) return { status: 'pending' };
       take(args.sessionId);

@@ -106,8 +106,13 @@ async function loadInto(target, emptyDb) {
   const counts = {};
   let documents = 0;
 
+  const fetched = {};
+  await Promise.all(arrays.concat(maps).map(async (key) => {
+    fetched[key] = await database.collection(key).find({}).toArray();
+  }));
+
   for (const key of arrays) {
-    const docs = await database.collection(key).find({}).toArray();
+    const docs = fetched[key];
     docs.sort((a, b) => (a._ord === undefined ? 0 : a._ord) - (b._ord === undefined ? 0 : b._ord));
     next[key] = docs.map((d) => {
       const row = Object.assign({}, d);
@@ -120,7 +125,7 @@ async function loadInto(target, emptyDb) {
   }
 
   for (const key of maps) {
-    const docs = await database.collection(key).find({}).toArray();
+    const docs = fetched[key];
     const out = {};
     docs.forEach((d) => { out[d._id] = d.v; });
     next[key] = out;
@@ -194,6 +199,56 @@ async function syncAll(db) {
   );
 }
 
+function arrayDocs(rows) {
+  return rows.map((element, i) => {
+    const doc = Object.assign({}, element);
+    doc._id = idOf(element, i);
+    doc._ord = i;
+    return doc;
+  });
+}
+
+function mapDocs(obj) {
+  return Object.keys(obj).map((k) => ({ _id: k, v: obj[k] }));
+}
+
+/** Serialised view of every document, keyed by collection then _id. */
+function snapshot(db) {
+  const { arrays, maps } = classify(db);
+  const out = {};
+  arrays.forEach((key) => { out[key] = new Map(arrayDocs(db[key]).map((d) => [d._id, JSON.stringify(d)])); });
+  maps.forEach((key) => { out[key] = new Map(mapDocs(db[key]).map((d) => [d._id, JSON.stringify(d)])); });
+  return out;
+}
+
+/**
+ * Write only what changed since `base` (a snapshot()): upsert new or modified
+ * documents, delete the ones that were loaded and are now gone. Documents this
+ * instance never saw are left alone, so concurrent writers do not erase each
+ * other. Returns the new snapshot.
+ */
+async function syncDiff(db, base) {
+  const next = snapshot(db);
+  await Promise.all(Object.keys(next).map(async (key) => {
+    const before = base[key] || new Map();
+    const now = next[key];
+    const ops = [];
+    now.forEach((json, id) => {
+      if (before.get(id) !== json) ops.push({ replaceOne: { filter: { _id: id }, replacement: JSON.parse(json), upsert: true } });
+    });
+    before.forEach((json, id) => {
+      if (!now.has(id)) ops.push({ deleteOne: { filter: { _id: id } } });
+    });
+    if (ops.length) await database.collection(key).bulkWrite(ops, { ordered: false });
+  }));
+  await database.collection(META_COLLECTION).replaceOne(
+    { _id: 'schema' },
+    { _id: 'schema', schema_version: db.schema_version, updated_at: new Date() },
+    { upsert: true }
+  );
+  return next;
+}
+
 async function close() {
   if (client) {
     try { await client.close(); } catch (e) { log.error('mongo', 'close failed', e); }
@@ -204,4 +259,4 @@ async function close() {
 
 function connected() { return !!database; }
 
-module.exports = { connect, loadInto, syncAll, close, connected, hydrate, classify, idOf, loadDriver };
+module.exports = { connect, loadInto, syncAll, syncDiff, snapshot, close, connected, hydrate, classify, idOf, loadDriver };

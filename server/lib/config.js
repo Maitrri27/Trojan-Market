@@ -1,4 +1,5 @@
 /* Central configuration. Everything overridable by environment variable. */
+const os = require('os');
 const path = require('path');
 
 const num = (k, d) => (process.env[k] === undefined ? d : Number(process.env[k]));
@@ -8,13 +9,20 @@ const str = (k, d) => (process.env[k] === undefined ? d : process.env[k]);
 const SERVER_DIR = path.join(__dirname, '..');
 const ROOT = path.join(SERVER_DIR, '..');
 
+/* Vercel: serverless functions, read-only filesystem outside /tmp, ephemeral
+   instances. Runtime files move to the temp dir; explicit env vars still win. */
+const IS_VERCEL = !!process.env.VERCEL;
+const RUNTIME_DIR = IS_VERCEL ? path.join(os.tmpdir(), 'trojan-market') : null;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 module.exports = {
   PORT: num('PORT', 4000),
   ROOT: ROOT,
   PUBLIC_DIR: path.join(ROOT, 'public'),
-  DATA_DIR: str('TM_DATA_DIR', path.join(SERVER_DIR, 'data')),
-  DB_FILE: str('TM_DB_FILE', path.join(SERVER_DIR, 'db.json')),
-  EVENT_LOG: str('TM_EVENT_LOG', path.join(SERVER_DIR, 'data', 'events.jsonl')),
+  IS_VERCEL: IS_VERCEL,
+  DATA_DIR: str('TM_DATA_DIR', path.join(RUNTIME_DIR || SERVER_DIR, 'data')),
+  DB_FILE: str('TM_DB_FILE', path.join(RUNTIME_DIR || SERVER_DIR, 'db.json')),
+  EVENT_LOG: str('TM_EVENT_LOG', path.join(RUNTIME_DIR || SERVER_DIR, 'data', 'events.jsonl')),
 
   /* MongoDB — OPT-IN. Unset means the file-backed store above is used, which
      needs no external service and is what the test suite runs against. */
@@ -22,15 +30,24 @@ module.exports = {
   MONGO_DB: str('TM_MONGO_DB', 'trojan_market'),
   MONGO_TIMEOUT_MS: num('TM_MONGO_TIMEOUT_MS', 5000),
   MODEL_DIR: str('TM_MODEL_DIR', path.join(ROOT, 'ml', 'artifacts')),
-  REGISTRY_FILE: str('TM_REGISTRY_FILE', path.join(ROOT, 'ml', 'artifacts', 'registry.json')),
+  REGISTRY_FILE: str('TM_REGISTRY_FILE', path.join(RUNTIME_DIR || path.join(ROOT, 'ml', 'artifacts'), 'registry.json')),
 
-  IS_PRODUCTION: process.env.NODE_ENV === 'production',
+  IS_PRODUCTION: IS_PRODUCTION,
 
   /* auth. The fixed demo code is a local-development convenience only: it is
-     ignored, and never returned to the client, when NODE_ENV=production. */
+     ignored, and never returned to the client, when NODE_ENV=production.
+     On Vercel NODE_ENV is production, so there the demo code is controlled by
+     TM_DEMO_CODE alone: set means enabled, unset means disabled. */
   AUTH_EMAIL_DOMAIN: str('TM_EMAIL_DOMAIN', 'usc.edu'),
-  DEMO_AUTH_CODE: str('TM_DEMO_CODE', process.env.NODE_ENV === 'production' ? '' : '482913'),
+  DEMO_AUTH_CODE: str('TM_DEMO_CODE', IS_PRODUCTION || IS_VERCEL ? '' : '482913'),
+  DEMO_CODE_EXPLICIT: IS_VERCEL && !!process.env.TM_DEMO_CODE,
   SESSION_TTL_MS: num('TM_SESSION_TTL_MS', 30 * 24 * 3600 * 1000),
+
+  /* Stateless sessions: HMAC-signed tokens that any instance can verify, so a
+     sign-in survives a request landing on a different serverless instance.
+     On by default on Vercel only. */
+  STATELESS_SESSIONS: bool('TM_STATELESS_SESSIONS', IS_VERCEL),
+  SESSION_SECRET: str('TM_SESSION_SECRET', ''),
 
   /* identity verification (Credence ID Cloud SDK). With no license key the
      simulated adapter is used and the UI labels it as a demo. */
@@ -39,7 +56,7 @@ module.exports = {
   CREDENCE_PROFILE_ID: str('CREDENCE_PROFILE_ID', ''),
   PUBLIC_ORIGIN: str('PUBLIC_ORIGIN', ''),
   CREDENCE_TIMEOUT_MS: num('CREDENCE_TIMEOUT_MS', 15000),
-  SIMULATED_ID_ENABLED: bool('TM_SIMULATED_ID', process.env.NODE_ENV !== 'production'),
+  SIMULATED_ID_ENABLED: bool('TM_SIMULATED_ID', !IS_PRODUCTION && !IS_VERCEL),
 
   /* recommendations */
   REC_DEFAULT_LIMIT: num('TM_REC_LIMIT', 20),

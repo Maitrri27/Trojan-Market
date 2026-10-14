@@ -4,6 +4,7 @@ const cfg = require('../lib/config');
 const http = require('../lib/http');
 const store = require('../lib/store');
 const log = require('../lib/log');
+const tokens = require('../lib/token');
 
 const EMAIL_RE = new RegExp('^[^\\s@]+@' + cfg.AUTH_EMAIL_DOMAIN.replace('.', '\\.') + '$');
 
@@ -12,9 +13,11 @@ function nameFromEmail(email) {
 }
 
 /* The fixed demo code exists only for local development. In production it is
-   never used and never returned; a random code is issued for a mailer to send. */
+   never used and never returned; a random code is issued for a mailer to send.
+   The one exception is an explicit TM_DEMO_CODE on Vercel, where NODE_ENV is
+   always production. */
 function demoCode() {
-  if (cfg.IS_PRODUCTION) return null;
+  if (cfg.IS_PRODUCTION && !cfg.DEMO_CODE_EXPLICIT) return null;
   return cfg.DEMO_AUTH_CODE ? String(cfg.DEMO_AUTH_CODE) : null;
 }
 
@@ -42,22 +45,42 @@ async function request(ctx) {
   return http.ok(ctx.res, body);
 }
 
+/** Opens a session for `email`. With stateless sessions the token is signed and
+    carries the name and identity badge, so any instance can honour it. */
+function issueSession(email) {
+  const expires = Date.now() + cfg.SESSION_TTL_MS;
+  let token;
+  if (cfg.STATELESS_SESSIONS) {
+    const user = store.db.users[email] || {};
+    const id = user.identity && user.identity.verified ? user.identity : null;
+    token = tokens.sign({ e: email, n: user.name || nameFromEmail(email), x: expires, id: id });
+  } else {
+    token = crypto.randomBytes(24).toString('base64url');
+  }
+  store.db.sessions[token] = { email: email, created: Date.now(), expires: expires };
+  store.save();
+  return token;
+}
+
 async function verify(ctx) {
   const b = await http.readBody(ctx.req);
   const email = String(b.email || '').trim().toLowerCase();
   const rec = store.db.codes[email];
   if (!rec || rec.expires < Date.now()) return http.badRequest(ctx.res, 'Request a new code.');
   if (!sameCode(rec.code, String(b.code || '').trim())) return http.badRequest(ctx.res, 'That code is not right.');
-  const token = crypto.randomBytes(24).toString('base64url');
-  store.db.sessions[token] = { email: email, created: Date.now(), expires: Date.now() + cfg.SESSION_TTL_MS };
   store.db.users[email] = store.db.users[email] || { email: email, name: nameFromEmail(email), joined: Date.now(), email_verified: true };
   delete store.db.codes[email];
-  store.save();
+  const token = issueSession(email);
   return http.ok(ctx.res, { token: token, user: store.db.users[email] });
 }
 
 async function signout(ctx) {
-  if (ctx.token) { delete store.db.sessions[ctx.token]; store.save(); }
+  if (ctx.token) {
+    /* a signed token stays verifiable, so record the revocation instead */
+    if (tokens.isSigned(ctx.token)) store.db.sessions[ctx.token] = { email: ctx.user.email, revoked: true, expires: Date.now() + cfg.SESSION_TTL_MS };
+    else delete store.db.sessions[ctx.token];
+    store.save();
+  }
   return http.ok(ctx.res, { ok: true });
 }
 
@@ -72,7 +95,7 @@ async function config(ctx) {
 }
 
 module.exports = {
-  nameFromEmail, demoCode,
+  nameFromEmail, demoCode, issueSession,
   routes: [
     { method: 'POST', path: '/api/auth/request', handler: request },
     { method: 'POST', path: '/api/auth/verify', handler: verify },

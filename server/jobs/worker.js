@@ -76,19 +76,23 @@ register('deliver_notifications', 15000, () => {
   return { delivered: sent };
 });
 
+/** Run every job whose interval has elapsed. The interval worker calls this on
+    a timer; serverless deployments call it from the request path instead. */
+function runDue(at) {
+  const now = at || Date.now();
+  jobs.forEach((j) => {
+    if (now - j.last < j.everyMs) return;
+    j.last = now;
+    const done = log.timer('job.' + j.name);
+    try { j.fn(); j.runs++; }
+    catch (e) { j.failures++; log.error('jobs', j.name + ' failed', e); }
+    finally { done(); }
+  });
+}
+
 let timer = null;
 function start() {
-  timer = setInterval(() => {
-    const now = Date.now();
-    jobs.forEach((j) => {
-      if (now - j.last < j.everyMs) return;
-      j.last = now;
-      const done = log.timer('job.' + j.name);
-      try { j.fn(); j.runs++; }
-      catch (e) { j.failures++; log.error('jobs', j.name + ' failed', e); }
-      finally { done(); }
-    });
-  }, cfg.JOB_INTERVAL_MS);
+  timer = setInterval(runDue, cfg.JOB_INTERVAL_MS);
   timer.unref();
   log.info('jobs', 'worker started', { jobs: jobs.map((j) => j.name) });
 }
@@ -97,4 +101,4 @@ function status() {
   return jobs.map((j) => ({ name: j.name, every_ms: j.everyMs, runs: j.runs, failures: j.failures, last_run: j.last || null }));
 }
 
-module.exports = { start, status, register, enqueueNotification, jobs };
+module.exports = { start, runDue, status, register, enqueueNotification, jobs };

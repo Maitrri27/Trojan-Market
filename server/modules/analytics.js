@@ -147,7 +147,8 @@ async function health(ctx) {
     events_logged: store.eventTotal(),
     recommendation_mode: registry.mode(),
     schema_version: store.db.schema_version,
-    event_types: events.KNOWN.length
+    event_types: events.KNOWN.length,
+    realtime: !cfg.IS_VERCEL
   });
 }
 

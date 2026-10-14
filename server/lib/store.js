@@ -118,6 +118,7 @@ async function initMongo() {
         database: cfg.MONGO_DB, listings: db.listings.length, users: Object.keys(db.users).length
       });
     }
+    if (serverless) baseline = mongo.snapshot(db);
     return { backend: 'mongo' };
   } catch (e) {
     backend = 'memory';
@@ -131,11 +132,21 @@ async function initMongo() {
 let queued = false;
 let inFlight = null;
 
+/* Serverless: no timers between requests. save() only marks state dirty, the
+   request wrapper awaits commit() before responding, and refresh() re-reads
+   Mongo first so every instance sees the shared state. Mongo writes are
+   per-document diffs against what this instance loaded, so concurrent
+   instances only overwrite the documents they actually changed. */
+const serverless = cfg.IS_VERCEL;
+let dirty = false;
+let baseline = null;
+
 function flush() {
   if (backend === 'memory') return Promise.resolve();
 
   if (backend === 'file') {
     const t = log.timer('db.write');
+    ensureDir(path.dirname(cfg.DB_FILE));
     return new Promise((resolve) => {
       fs.writeFile(cfg.DB_FILE, JSON.stringify(db), (err) => {
         t();
@@ -146,7 +157,10 @@ function flush() {
   }
 
   const t = log.timer('db.write');
-  inFlight = mongo.syncAll(db)
+  const write = baseline
+    ? mongo.syncDiff(db, baseline).then((next) => { baseline = next; })
+    : mongo.syncAll(db);
+  inFlight = write
     .catch((err) => log.error('store', 'mongo sync failed — state is still correct in memory', err))
     .then(() => { t(); inFlight = null; });
   return inFlight;
@@ -154,12 +168,31 @@ function flush() {
 
 /** Unchanged signature and debounce: fire-and-forget, 150ms coalescing. */
 function save() {
+  if (serverless) { dirty = true; return; }
   if (queued) return;
   queued = true;
   setTimeout(() => {
     queued = false;
     flush();
   }, 150);
+}
+
+/** Serverless: persist anything the current request changed. */
+function commit() {
+  if (!dirty) return Promise.resolve();
+  dirty = false;
+  return flush();
+}
+
+/** Serverless + Mongo: reload shared state before handling a request. */
+async function refresh() {
+  await ready;
+  if (!serverless || backend !== 'mongo') return;
+  const t = log.timer('db.refresh');
+  await mongo.loadInto(db, emptyDb);
+  migrate(db);
+  baseline = mongo.snapshot(db);
+  t();
 }
 
 /** Flush pending writes and release the connection. */
@@ -256,6 +289,6 @@ readEvents({}).forEach(aggregate);
 module.exports = {
   db, save, appendEvents, readEvents, eventTotal, aggregate, agg, emptyDb, tail,
   /* migration surface */
-  ready, flush, close,
+  ready, flush, close, commit, refresh,
   backend: () => backend
 };

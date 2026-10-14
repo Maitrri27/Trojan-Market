@@ -15,6 +15,8 @@ const log = require('../../lib/log');
 const { createCredenceAdapter, CredenceError } = require('./credence');
 const { createSimulatedAdapter } = require('./simulated');
 const record = require('./record');
+const auth = require('../auth');
+const tokens = require('../../lib/token');
 
 const SESSION_TTL_MS = 10 * 60 * 1000;
 const DC_FLOWS = ['mdoc', 'openid4vp'];
@@ -34,7 +36,15 @@ function selectAdapter(c, deps) {
     }
   }
   if (!c.SIMULATED_ID_ENABLED) return null;
-  return createSimulatedAdapter({ now: d.now, qrDelayMs: d.qrDelayMs });
+  return createSimulatedAdapter({ now: d.now, qrDelayMs: d.qrDelayMs, codec: c.STATELESS_SESSIONS ? simulatedCodec() : null });
+}
+
+function simulatedCodec() {
+  const key = () => tokens.keyFor('simulated-wallet');
+  return {
+    encode: (state) => tokens.seal(Object.assign({ x: Date.now() + SESSION_TTL_MS }, state), key()),
+    decode: (value) => tokens.unseal(value, key())
+  };
 }
 
 let adapter = selectAdapter(cfg, { onError: (e) => log.error('identity', 'Credence ID is misconfigured; verification disabled', e) });
@@ -86,18 +96,40 @@ function sweep() {
   sessions.forEach((s, id) => { if (t - s.created > SESSION_TTL_MS) sessions.delete(id); });
 }
 
+/* Returns the id handed to the browser. With stateless sessions it is a sealed
+   record of the verification session, so any instance can continue the flow;
+   otherwise it is the adapter's id and the record stays in memory here. */
 function openSession(ctx, kind, flow, id) {
   sweep();
-  sessions.set(id, { email: ctx.user.email, kind: kind, flow: flow, created: Date.now() });
+  const s = { email: ctx.user.email, kind: kind, flow: flow, adapterId: id, created: Date.now() };
+  if (cfg.STATELESS_SESSIONS) return tokens.seal(Object.assign({ x: s.created + SESSION_TTL_MS }, s), tokens.keyFor('identity-session'));
+  sessions.set(id, s);
+  return id;
 }
 
 function ownSession(ctx, kind, id) {
   sweep();
-  const s = sessions.get(String(id || ''));
+  const key = String(id || '');
+  const s = cfg.STATELESS_SESSIONS
+    ? (sessions.has(key) ? null : tokens.unseal(key, tokens.keyFor('identity-session')))
+    : sessions.get(key);
   return s && s.kind === kind && s.email === ctx.user.email ? s : null;
 }
 
+/* Marks a stateless id as spent on this instance; drops an in-memory one. */
+function closeSession(id) {
+  if (cfg.STATELESS_SESSIONS) sessions.set(String(id), { created: Date.now() });
+  else sessions.delete(id);
+}
+
 /* ------------------------------------------------------------ handlers */
+
+/* With stateless sessions the token carries the name and badge, so every
+   change to either is answered with a re-issued token. */
+function withToken(ctx, body) {
+  if (cfg.STATELESS_SESSIONS) body.token = auth.issueSession(ctx.user.email);
+  return body;
+}
 
 function unavailable(res) {
   return http.json(res, 503, { error: 'Digital ID verification is not configured on this server.', code: 'ID_VERIFICATION_DISABLED' });
@@ -118,7 +150,7 @@ function finish(ctx, outcome) {
     user.identity = result.record;
     store.save();
     log.info('identity', 'digital ID verified (' + adapter.mode + ')');
-    return http.ok(ctx.res, { status: 'verified', identity: publicRecord(result.record) });
+    return http.ok(ctx.res, withToken(ctx, { status: 'verified', identity: publicRecord(result.record) }));
   }
   return http.ok(ctx.res, result);
 }
@@ -144,8 +176,8 @@ async function dcStart(ctx) {
     const user = store.db.users[ctx.user.email] || {};
     const r = await adapter.startDc({ flow: flow, scenario: b.scenario, holderName: user.name });
     if (!r || !r.sessionId) return http.json(ctx.res, 502, { error: 'The verification service returned no session.', code: 'UPSTREAM_ERROR' });
-    openSession(ctx, 'dc', flow, r.sessionId);
-    return http.ok(ctx.res, { sessionId: r.sessionId, flow: flow, protocol: r.protocol, data: r.data, demo: adapter.mode === 'simulated' });
+    const sessionId = openSession(ctx, 'dc', flow, r.sessionId);
+    return http.ok(ctx.res, { sessionId: sessionId, flow: flow, protocol: r.protocol, data: r.data, demo: adapter.mode === 'simulated' });
   } catch (e) { return upstream(ctx.res, e); }
 }
 
@@ -154,9 +186,9 @@ async function dcVerify(ctx) {
   const b = await http.readBody(ctx.req);
   const s = ownSession(ctx, 'dc', b.sessionId);
   if (!s) return http.ok(ctx.res, { status: 'failed', reason: 'SESSION_NOT_FOUND', message: record.reasonMessage('SESSION_NOT_FOUND') });
-  sessions.delete(b.sessionId);
+  closeSession(b.sessionId);
   try {
-    return finish(ctx, await adapter.verifyDc({ flow: s.flow, sessionId: b.sessionId, data: b.data }));
+    return finish(ctx, await adapter.verifyDc({ flow: s.flow, sessionId: s.adapterId, data: b.data }));
   } catch (e) { return upstream(ctx.res, e); }
 }
 
@@ -171,8 +203,8 @@ async function qrStart(ctx) {
       returnUrl: cfg.PUBLIC_ORIGIN ? cfg.PUBLIC_ORIGIN.replace(/\/+$/, '') + '/' : undefined
     });
     if (!r || !r.sessionId || !r.walletUri) return http.json(ctx.res, 502, { error: 'The verification service returned no wallet link.', code: 'UPSTREAM_ERROR' });
-    openSession(ctx, 'qr', flow, r.sessionId);
-    return http.ok(ctx.res, { sessionId: r.sessionId, flow: flow, walletUri: r.walletUri, pollMs: 2000, demo: adapter.mode === 'simulated' });
+    const sessionId = openSession(ctx, 'qr', flow, r.sessionId);
+    return http.ok(ctx.res, { sessionId: sessionId, flow: flow, walletUri: r.walletUri, pollMs: 2000, demo: adapter.mode === 'simulated' });
   } catch (e) { return upstream(ctx.res, e); }
 }
 
@@ -182,9 +214,9 @@ async function qrPoll(ctx) {
   const s = ownSession(ctx, 'qr', b.sessionId);
   if (!s) return http.ok(ctx.res, { status: 'failed', reason: 'SESSION_NOT_FOUND', message: record.reasonMessage('SESSION_NOT_FOUND') });
   try {
-    const outcome = await adapter.pollQr({ flow: s.flow, sessionId: b.sessionId });
+    const outcome = await adapter.pollQr({ flow: s.flow, sessionId: s.adapterId });
     if (outcome.status === 'pending') return http.ok(ctx.res, { status: 'pending' });
-    sessions.delete(b.sessionId);
+    closeSession(b.sessionId);
     return finish(ctx, outcome);
   } catch (e) { return upstream(ctx.res, e); }
 }
@@ -204,7 +236,7 @@ async function setName(ctx) {
     store.db.listings.forEach((l) => { if (l.email === user.email) l.seller = name; });
     store.save();
   }
-  return http.ok(ctx.res, { user: user, verified: isVerified(user.email) });
+  return http.ok(ctx.res, withToken(ctx, { user: user, verified: isVerified(user.email) }));
 }
 
 module.exports = {

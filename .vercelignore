@@ -1,0 +1,6 @@
+ml/
+docs/
+tests/
+server/db.json
+server/data/
+.env

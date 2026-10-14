@@ -1193,6 +1193,7 @@ class Component extends DCLogic {
     this.flushEvents();
     if (this._hideHandler) document.removeEventListener('visibilitychange', this._hideHandler);
     if (this.es) this.es.close();
+    if (this._statePoll) { clearInterval(this._statePoll); this._statePoll = null; }
     if (this.chan) this.chan.close();
     if (this.replyTimer) clearTimeout(this.replyTimer);
     if (this.toastTimer) clearTimeout(this.toastTimer);
@@ -1485,6 +1486,7 @@ class Component extends DCLogic {
     fetch('/api/health').then(r => r.ok ? r.json() : null).then(h => {
       if (!h || !h.ok) return;
       this.api = true;
+      this.realtime = h.realtime !== false;
       return fetch('/api/state', { headers: this.authHeaders() }).then(r => r.json()).then(d => {
         if (!d.user) { this.token = null; try { localStorage.removeItem('trojan-market-token'); } catch (e) {} }
         this.setState({
@@ -1534,6 +1536,7 @@ class Component extends DCLogic {
     this.stopPolling();
     const d = (r && r.data) || {};
     if (r && r.ok && d.status === 'verified') {
+      this.adoptToken(d.token);
       this._focusResult = true;
       this.setVf({ phase: 'success', message: '' });
       this.loadIdentity().then(() => this.refreshState());
@@ -1609,9 +1612,32 @@ class Component extends DCLogic {
     return h;
   }
 
+  /* The server re-issues the session token when the name or ID badge changes. */
+  adoptToken(token) {
+    if (!token) return;
+    this.token = token;
+    try { localStorage.setItem('trojan-market-token', token); } catch (e) {}
+  }
+
+  /* Hosts without a live stream (serverless) get periodic refreshes instead. */
+  startPolling() {
+    if (this._statePoll) return;
+    const tick = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      fetch('/api/state', { headers: this.authHeaders() }).then(r => r.json())
+        .then(d => this.setState({ listings: d.listings || this.state.listings, threads: d.threads || this.state.threads }))
+        .catch(() => {});
+    };
+    this._statePoll = setInterval(tick, 4000);
+  }
+
   openStream() {
-    if (this.es || typeof EventSource !== 'function') return;
+    if (this.realtime === false || typeof EventSource !== 'function') { this.startPolling(); return; }
+    if (this.es) return;
     this.es = new EventSource('/api/stream');
+    this.es.onerror = () => {
+      if (this.es && this.es.readyState === 2) { this.es.close(); this.startPolling(); }
+    };
     const refresh = () => fetch('/api/state', { headers: this.authHeaders() }).then(r => r.json())
       .then(d => this.setState({ listings: d.listings || this.state.listings, threads: d.threads || this.state.threads }))
       .catch(() => {});
@@ -2172,6 +2198,7 @@ class Component extends DCLogic {
       saveName: () => {
         this.post('/api/identity/name', { name: s.vf.nameDraft }).then(r => {
           if (!r.ok) { this.notify(r.data.error || 'Could not save name'); return; }
+          this.adoptToken(r.data.token);
           this.setState({ user: Object.assign({}, s.user, { name: r.data.user.name }) });
           this.notify('Name saved');
           this.loadIdentity().then(() => this.refreshState());
