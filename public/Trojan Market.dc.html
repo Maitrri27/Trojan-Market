@@ -1,0 +1,2251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trojan Market</title>
+<script src="./qr.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800;1,900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #FDF9F0; }
+  body { font-family: Inter, Helvetica, Arial, sans-serif; color: #241A12; -webkit-font-smoothing: antialiased; }
+  a { color: #990000; text-decoration: none; }
+  a:hover { color: #6E0000; text-decoration: underline; }
+  input, textarea, select, button { font-family: inherit; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid #FFC72C; outline-offset: 1px; }
+  button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px solid #241A12; outline-offset: 2px; }
+  .tm-badge { display: inline-flex; align-items: center; gap: 5px; background: #E7F1E9; border: 1px solid #9CC3A6; color: #1E4D2B; border-radius: 999px; padding: 3px 9px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+  .tm-btn { min-height: 44px; }
+  @media (max-width: 700px) { .tm-hero { padding: 30px 22px !important; } .tm-hero h1 { font-size: 36px !important; } .tm-stack { grid-template-columns: minmax(0, 1fr) !important; } .tm-sticky { position: static !important; max-width: none !important; } }
+  ::placeholder { color: #9C8F7E; }
+  @keyframes tmIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-direction: column; background: #FDF9F0;">
+
+  <header style="position: sticky; top: 0; z-index: 40; background: rgba(253,249,240,0.94); backdrop-filter: blur(8px); border-bottom: 1px solid #EAE1CE;">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+      <div onClick="{{ goHome }}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex-shrink: 0;">
+        <div style="width: 34px; height: 34px; border-radius: 8px; background: #990000; color: #FFC72C; display: grid; place-items: center; font-weight: 900; font-style: italic; font-size: 19px;">T</div>
+        <div style="font-weight: 800; letter-spacing: -0.01em; font-size: 17px;">TROJAN MARKET</div>
+      </div>
+      <div style="flex: 1 1 260px; display: flex; align-items: center; gap: 10px; background: #F1EBDF; border: 1px solid #E6DCC7; border-radius: 999px; padding: 9px 16px; min-width: 220px; order: 3;">
+        <div style="width: 15px; height: 15px; border: 2px solid #8C7E6B; border-radius: 50%; flex-shrink: 0;"></div>
+        <input value="{{ q }}" onChange="{{ onSearch }}" aria-label="Search listings" placeholder="Search housing, desks, chairs..." style="flex: 1; border: 0; background: transparent; font-size: 15px; color: #241A12; min-width: 0;" />
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 1; min-width: 0; flex-wrap: wrap; justify-content: flex-end;">
+        <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+            <button onClick="{{ goMessages }}" style="position: relative; border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 9px 15px; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">Messages <span style="font-family: 'JetBrains Mono', monospace; color: #990000;">{{ unreadLabel }}</span></button>
+            <button onClick="{{ goForYou }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 9px 15px; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">For You</button>
+            <button onClick="{{ goRoommates }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 9px 15px; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">Roommates</button>
+            <button onClick="{{ goFavorites }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 9px 15px; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">Saved</button>
+            <button onClick="{{ goMine }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 9px 15px; font-size: 13px; font-weight: 600; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">My Listings</button>
+            <sc-if value="{{ meVerified }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ goVerify }}" class="tm-badge tm-btn" style="cursor: pointer; padding: 0 12px;" aria-label="{{ meBadgeAria }}">✓ {{ meBadgeLabel }}</button>
+            </sc-if>
+            <sc-if value="{{ meUnverified }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ goVerify }}" class="tm-btn" style="border: 1px solid #990000; background: #FFFFFF; color: #990000; border-radius: 999px; padding: 9px 15px; font-size: 13px; font-weight: 700; cursor: pointer;">Verify with digital ID</button>
+            </sc-if>
+            <button onClick="{{ goPost }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">+ Post</button>
+            <button onClick="{{ signOut }}" aria-label="Sign out" title="Sign out" class="tm-btn" style="width: 44px; height: 44px; border: 0; border-radius: 50%; background: #241A12; color: #FFC72C; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer;">{{ initials }}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ signedOut }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ openAuth }}" style="border: 0; background: #241A12; color: #FDF9F0; border-radius: 999px; padding: 12px 26px; font-size: 15px; font-weight: 700; cursor: pointer;" style-hover="background: #000000;">Sign in</button>
+        </sc-if>
+      </div>
+    </div>
+    <div style="max-width: 1240px; margin: 0 auto; padding: 0 24px 12px; display: flex; gap: 6px; overflow-x: auto;">
+      <sc-for list="{{ navCats }}" as="c" hint-placeholder-count="10">
+        <button onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+  </header>
+
+  <main style="flex: 1; max-width: 1240px; width: 100%; margin: 0 auto; padding: 28px 24px 64px;">
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div style="animation: tmIn 0.25s ease both;">
+        <section class="tm-hero" style="border: 2px dashed #F0C64B; background: #FDF1D2; border-radius: 18px; padding: 52px 56px; margin-bottom: 52px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.12em; color: #8A0000; font-weight: 500; margin-bottom: 18px;">FOR INTERNATIONAL STUDENTS &nbsp;•&nbsp; USC</div>
+          <h1 style="font-size: 54px; line-height: 1.04; letter-spacing: -0.035em; font-weight: 800; margin: 0 0 22px; max-width: 900px;">Land in LA with a room, a desk and a chair <em style="color: #990000; font-weight: 900;">already sorted.</em></h1>
+          <p style="font-size: 19px; line-height: 1.55; color: #453729; max-width: 680px; margin: 0 0 30px; text-wrap: pretty;">Find housing near UPC and HSC before you arrive, then pick up desks, chairs and move-in essentials from students who are leaving. Sign in with your <strong>@usc.edu</strong> email to browse and message. Students who post have verified a digital ID from their phone wallet, so you know who you are dealing with.</p>
+          <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <button onClick="{{ viewHousing }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 17px 32px; font-size: 16px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">Find housing</button>
+            <button onClick="{{ viewMoveIn }}" style="border: 1px solid #C9BBA0; background: #FFFDF7; color: #241A12; border-radius: 999px; padding: 17px 30px; font-size: 16px; font-weight: 700; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">Desks, chairs &amp; move-in</button>
+            <button onClick="{{ goPost }}" style="border: 1px solid #C9BBA0; background: #FFFDF7; color: #241A12; border-radius: 999px; padding: 17px 30px; font-size: 16px; font-weight: 700; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">+ Post something</button>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 56px;">
+          <div style="display: flex; align-items: flex-end; gap: 24px; margin-bottom: 22px;">
+            <div>
+              <h2 style="font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px;">Recommended for you</h2>
+              <div style="font-size: 15.5px; color: #55463A;">Ranked by simple rules: your stated preferences and what you have opened</div>
+            </div>
+            <div style="flex: 1; height: 1px; background: #E4DAC5; margin-bottom: 8px;"></div>
+            <button onClick="{{ goForYou }}" style="border: 0; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.06em; color: #241A12; cursor: pointer; padding: 0 0 8px;" style-hover="color: #990000;">SEE_ALL_→</button>
+          </div>
+          <sc-if value="{{ needsProfile }}" hint-placeholder-val="{{ false }}">
+            <div style="border: 2px dashed #F0C64B; background: #FDF1D2; border-radius: 16px; padding: 26px 30px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; margin-bottom: 22px;">
+              <div style="flex: 1; min-width: 280px;">
+                <div style="font-weight: 800; font-size: 19px; margin-bottom: 6px;">Tell us what you are looking for</div>
+                <div style="font-size: 15.5px; color: #453729;">Budget, neighborhood, commute, sleep schedule and cleanliness — two minutes, and every listing and roommate gets a match score.</div>
+              </div>
+              <button onClick="{{ goProfile }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 14px 26px; font-size: 15px; font-weight: 700; cursor: pointer;">Set my preferences</button>
+            </div>
+          </sc-if>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 22px;">
+            <sc-for list="{{ recs }}" as="l" hint-placeholder-count="5">
+              <div onClick="{{ l.open }}" style="cursor: pointer;">
+                <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #EAE1CE;">
+                  <div style="{{ l.matchStyle }}">{{ l.matchLabel }}</div>
+                  <div style="{{ l.photoStyle }}"><span>{{ l.photoLabel }}</span><sc-if value="{{ l.hasPhoto }}" hint-placeholder-val="{{ false }}"><img data-src="{{ l.photoUrl }}" ref="{{ imgRef }}" alt="{{ l.title }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" /></sc-if></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 12px;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #990000;">{{ l.catLabel }}</div>
+                  <div style="font-weight: 800; font-size: 16px;">{{ l.priceLabel }}</div>
+                </div>
+                <div style="font-weight: 700; font-size: 15px; margin-top: 5px; line-height: 1.3;">{{ l.title }}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7A6B58;">{{ l.meta }}</div>
+                  <button onClick="{{ l.skip }}" style="border: 0; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; color: #9C8F7E; cursor: pointer; padding: 2px 4px;" style-hover="color: #990000;">NOT_FOR_ME</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 56px;">
+          <div style="display: flex; align-items: baseline; gap: 20px; margin-bottom: 20px;">
+            <h2 style="font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin: 0;">Browse by category</h2>
+            <div style="flex: 1; height: 1px; background: #E4DAC5;"></div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 12px;">
+            <sc-for list="{{ homeCats }}" as="c" hint-placeholder-count="9">
+              <div onClick="{{ c.pick }}" style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 14px; padding: 22px 10px; text-align: center; cursor: pointer;" style-hover="border-color: #FFC72C; transform: translateY(-2px);">
+                <div style="font-size: 30px; line-height: 1; margin-bottom: 12px;">{{ c.icon }}</div>
+                <div style="font-size: 13px; font-weight: 700;">{{ c.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 56px;">
+          <div style="display: flex; align-items: flex-end; gap: 24px; margin-bottom: 22px;">
+            <div>
+              <h2 style="font-size: 32px; font-weight: 800; letter-spacing: -0.02em; color: #990000; margin: 0 0 4px;">Housing near campus</h2>
+              <div style="font-size: 16px; color: #55463A;">Rooms, subleases and shared apartments near UPC and HSC, with commute times</div>
+            </div>
+            <div style="flex: 1; height: 1px; background: #E4DAC5; margin-bottom: 8px;"></div>
+            <button onClick="{{ viewHousing }}" style="border: 0; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.06em; color: #241A12; cursor: pointer; padding: 0 0 8px;" style-hover="color: #990000;">VIEW_ALL_→</button>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start;">
+
+            <aside class="tm-sticky" style="flex: 1 1 260px; max-width: 300px; min-width: 0; position: sticky; top: 132px; background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 20px 22px;">
+              <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 14px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.14em; font-weight: 700; color: #241A12;">FILTERS</div>
+                <div style="flex: 1;"></div>
+                <button onClick="{{ resetFilters }}" style="border: 0; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; color: #9C8F7E; cursor: pointer; padding: 0;" style-hover="color: #990000;">RESET</button>
+              </div>
+
+              <div style="background: #FDF1D2; border: 1px solid #F0C64B; border-radius: 10px; padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.08em; color: #6E4E00; font-weight: 700; text-align: center;">{{ housingCount }}</div>
+
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 16px 0 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">RENT</span>
+                  <span style="font-size: 12.5px; font-weight: 700;">{{ rentLabel }}</span>
+                </div>
+                <input type="range" min="0" max="2500" step="50" value="{{ hf.rentMin }}" onChange="{{ onRentMin }}" style="width: 100%; accent-color: #990000;" />
+                <input type="range" min="0" max="2500" step="50" value="{{ hf.rentMax }}" onChange="{{ onRentMax }}" style="width: 100%; accent-color: #990000;" />
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">DISTANCE TO USC</span>
+                  <span style="font-size: 12.5px; font-weight: 700;">{{ distanceLabel }}</span>
+                </div>
+                <input type="range" min="3" max="30" step="1" value="{{ hf.distance }}" onChange="{{ onDistance }}" style="width: 100%; accent-color: #990000;" />
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">BEDROOMS</span>
+                <div style="display: flex; gap: 7px; flex-wrap: wrap;">
+                  <sc-for list="{{ bedOpts }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div></sc-for>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">BATHROOMS</span>
+                <div style="display: flex; gap: 7px; flex-wrap: wrap;">
+                  <sc-for list="{{ bathOpts }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div></sc-for>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">AVAILABILITY</span>
+                <div style="display: flex; gap: 7px; flex-wrap: wrap;">
+                  <sc-for list="{{ availOpts }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div></sc-for>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">FURNISHING</span>
+                <div style="display: flex; gap: 7px; flex-wrap: wrap;">
+                  <sc-for list="{{ furnishOpts }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div></sc-for>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">LEASE DURATION</span>
+                <div style="display: flex; gap: 7px; flex-wrap: wrap;">
+                  <sc-for list="{{ leaseOpts }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div></sc-for>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">GENDER PREFERENCE</span>
+                <div style="display: flex; gap: 7px; flex-wrap: wrap;">
+                  <sc-for list="{{ genderOpts }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div></sc-for>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">FOOD PREFERENCE</span>
+                <div style="display: flex; gap: 7px; flex-wrap: wrap;">
+                  <sc-for list="{{ foodOpts }}" as="o" hint-placeholder-count="4"><div onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div></sc-for>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 0; border-top: 1px solid #F1EAD9;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58;">AMENITIES</span>
+                <div style="display: flex; gap: 7px; flex-wrap: wrap;">
+                  <sc-for list="{{ amenityOpts }}" as="o" hint-placeholder-count="6"><div onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</div></sc-for>
+                </div>
+              </div>
+            </aside>
+
+            <div style="flex: 1 1 340px; min-width: 0;">
+            <sc-if value="{{ noHousing }}" hint-placeholder-val="{{ false }}">
+              <div style="border: 2px dashed #E0D5BE; border-radius: 16px; padding: 48px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.06em; color: #7A6B58;">NO_HOMES_MATCH — widen the rent range or clear a filter</div>
+            </sc-if>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 22px;">
+              <sc-for list="{{ housingResults }}" as="l" hint-placeholder-count="4">
+                <div onClick="{{ l.open }}" style="cursor: pointer;">
+                  <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #EAE1CE;">
+                    <div style="{{ l.matchStyle }}">{{ l.matchLabel }}</div>
+                    <div style="{{ l.photoStyle }}"><span>{{ l.photoLabel }}</span><sc-if value="{{ l.hasPhoto }}" hint-placeholder-val="{{ false }}"><img data-src="{{ l.photoUrl }}" ref="{{ imgRef }}" alt="{{ l.title }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" /></sc-if></div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 12px;">
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #990000;">{{ l.catLabel }}</div>
+                    <div style="font-weight: 800; font-size: 16px;">{{ l.priceLabel }}</div>
+                  </div>
+                  <div style="font-weight: 700; font-size: 15px; margin-top: 5px; line-height: 1.3;">{{ l.title }}</div>
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #6B5C49; margin-top: 5px;">{{ l.specLabel }}</div>
+                  <sc-if value="{{ l.sellerVerified }}" hint-placeholder-val="{{ false }}"><div style="margin-top: 6px;"><span class="tm-badge">✓ {{ l.badgeLabel }}</span></div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            </div>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 48px;">
+          <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 22px;">
+            <h2 style="font-size: 30px; font-weight: 800; letter-spacing: -0.01em; margin: 0;">MOST RECENT</h2>
+            <div style="flex: 1; height: 1px; background: #E4DAC5;"></div>
+            <button onClick="{{ goBrowse }}" style="border: 0; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.06em; color: #241A12; cursor: pointer;" style-hover="color: #990000;">VIEW_ALL_→</button>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 22px;">
+            <sc-for list="{{ recent }}" as="l" hint-placeholder-count="4">
+              <div onClick="{{ l.open }}" style="cursor: pointer;">
+                <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #EAE1CE;">
+                  <div style="{{ l.photoStyle }}"><span>{{ l.photoLabel }}</span><sc-if value="{{ l.hasPhoto }}" hint-placeholder-val="{{ false }}"><img data-src="{{ l.photoUrl }}" ref="{{ imgRef }}" alt="{{ l.title }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" /></sc-if></div>
+                  <sc-if value="{{ l.isFree }}" hint-placeholder-val="{{ false }}">
+                    <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFC72C; color: #241A12; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: 0.1em; text-align: center; padding: 9px 0;">FREE</div>
+                  </sc-if>
+                  <sc-if value="{{ l.isSold }}" hint-placeholder-val="{{ false }}">
+                    <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #241A12; color: #FDF9F0; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: 0.1em; text-align: center; padding: 9px 0;">SOLD</div>
+                  </sc-if>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 12px;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #990000;">{{ l.catLabel }}</div>
+                  <div style="font-weight: 800; font-size: 16px;">{{ l.priceLabel }}</div>
+                </div>
+                <div style="font-weight: 700; font-size: 15px; margin-top: 5px; line-height: 1.3;">{{ l.title }}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #6B5C49; margin-top: 5px;">{{ l.meta }}</div>
+                <sc-if value="{{ l.sellerVerified }}" hint-placeholder-val="{{ false }}"><div style="margin-top: 6px;"><span class="tm-badge">✓ {{ l.badgeLabel }}</span></div></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="border: 2px dashed #F0C64B; background: #FDF1D2; border-radius: 18px; padding: 38px 44px; display: flex; gap: 40px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 300px;">
+            <h3 style="font-size: 26px; font-weight: 900; font-style: italic; letter-spacing: -0.01em; margin: 0 0 14px;">HOW TRUST WORKS HERE</h3>
+            <p style="font-size: 16.5px; line-height: 1.55; color: #453729; margin: 0; text-wrap: pretty;">A <strong>usc.edu</strong> email lets you browse and message. To post a listing or housing, a student verifies a digital ID from their phone wallet, and the name on it must match their account. Never send a deposit before you have seen a place, meet in public spots like USC Village, and report anything suspicious.</p>
+          </div>
+          <div><span class="tm-badge">✓ Verified with digital ID</span></div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isBrowse }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: tmIn 0.25s ease both;">
+        <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+          <h2 style="font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin: 0;">{{ browseTitle }}</h2>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #7A6B58;">{{ resultsLabel }}</div>
+          <div style="flex: 1;"></div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button onClick="{{ toggleFree }}" style="{{ freeBtnStyle }}">FREE ONLY</button>
+            <select value="{{ sort }}" onChange="{{ onSort }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 10px 14px; font-size: 13px; font-weight: 600; cursor: pointer;">
+              <option value="new">Newest first</option>
+              <option value="low">Price: low to high</option>
+              <option value="high">Price: high to low</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 22px;">
+          <sc-for list="{{ results }}" as="l" hint-placeholder-count="8">
+            <div onClick="{{ l.open }}" style="cursor: pointer;">
+              <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #EAE1CE;">
+                <div style="{{ l.photoStyle }}"><span>{{ l.photoLabel }}</span><sc-if value="{{ l.hasPhoto }}" hint-placeholder-val="{{ false }}"><img data-src="{{ l.photoUrl }}" ref="{{ imgRef }}" alt="{{ l.title }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" /></sc-if></div>
+                <sc-if value="{{ l.isFree }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFC72C; color: #241A12; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: 0.1em; text-align: center; padding: 9px 0;">FREE</div>
+                </sc-if>
+                <sc-if value="{{ l.isSold }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #241A12; color: #FDF9F0; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: 0.1em; text-align: center; padding: 9px 0;">SOLD</div>
+                </sc-if>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 12px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #990000;">{{ l.catLabel }}</div>
+                <div style="font-weight: 800; font-size: 16px;">{{ l.priceLabel }}</div>
+              </div>
+              <div style="font-weight: 700; font-size: 15px; margin-top: 5px; line-height: 1.3;">{{ l.title }}</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #6B5C49; margin-top: 5px;">{{ l.meta }}</div>
+              <sc-if value="{{ l.sellerVerified }}" hint-placeholder-val="{{ false }}"><div style="margin-top: 6px;"><span class="tm-badge">✓ {{ l.badgeLabel }}</span></div></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <div style="border: 2px dashed #E0D5BE; border-radius: 16px; padding: 60px; text-align: center; color: #7A6B58; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; letter-spacing: 0.06em;">NO_LISTINGS_MATCH — try another category or clear the free-only filter</div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: tmIn 0.25s ease both;">
+        <button onClick="{{ goBack }}" style="border: 0; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; letter-spacing: 0.08em; color: #7A6B58; cursor: pointer; padding: 0; margin-bottom: 18px;" style-hover="color: #990000;">←_BACK</button>
+        <div class="tm-stack" style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr); gap: 40px; align-items: start;">
+          <div>
+            <div style="border-radius: 16px; overflow: hidden; border: 1px solid #EAE1CE;">
+              <div style="{{ detail.bigPhotoStyle }}"><span>{{ detail.photoLabel }}</span><sc-if value="{{ detail.hasPhoto }}" hint-placeholder-val="{{ false }}"><img data-src="{{ detail.photoUrl }}" ref="{{ imgRef }}" alt="{{ detail.title }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" /></sc-if></div>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 14px; margin-top: 26px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; color: #990000;">{{ detail.catLabel }}</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #7A6B58;">{{ detail.meta }}</div>
+            </div>
+            <h1 style="font-size: 38px; font-weight: 800; letter-spacing: -0.025em; margin: 10px 0 8px; line-height: 1.1;">{{ detail.title }}</h1>
+            <div style="font-size: 30px; font-weight: 900; color: #990000; margin-bottom: 24px;">{{ detail.priceLabel }}</div>
+            <div style="height: 1px; background: #E4DAC5; margin-bottom: 24px;"></div>
+            <sc-if value="{{ hasHouseMatch }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 24px 26px; margin-bottom: 26px;">
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 14px;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: #7A6B58;">{{ houseMatch.headline }}</div>
+                  <div style="font-size: 30px; font-weight: 900; color: #990000; letter-spacing: -0.02em;">{{ houseMatch.score }}</div>
+                </div>
+                <div style="{{ houseMatch.barStyle }}"><div style="{{ houseMatch.fillStyle }}"></div></div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; margin-top: 18px;">
+                  <sc-for list="{{ houseMatch.rows }}" as="r" hint-placeholder-count="6">
+                    <div style="{{ r.style }}">{{ r.text }}</div>
+                  </sc-for>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px;">
+                  <sc-for list="{{ houseMatch.amenityList }}" as="a" hint-placeholder-count="3">
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ a.text }}</div>
+                  </sc-for>
+                </div>
+                <button onClick="{{ goProfile }}" style="border: 0; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: #9C8F7E; cursor: pointer; padding: 14px 0 0;" style-hover="color: #990000;">EDIT_PREFERENCES_→</button>
+              </div>
+            </sc-if>
+            <p style="font-size: 17px; line-height: 1.6; color: #3C3026; white-space: pre-wrap; margin: 0 0 28px; text-wrap: pretty;">{{ detail.description }}</p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button onClick="{{ toggleFav }}" style="{{ favBtnStyle }}">{{ favLabel }}</button>
+              <button onClick="{{ openReport }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 13px 22px; font-size: 14px; font-weight: 700; cursor: pointer; color: #55463A;" style-hover="border-color: #990000; color: #990000;">⚑ Report listing</button>
+            </div>
+          </div>
+          <aside class="tm-sticky" style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 26px; position: sticky; top: 130px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58; margin-bottom: 16px;">SELLER</div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
+              <div style="width: 46px; height: 46px; border-radius: 50%; background: #990000; color: #FFC72C; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-weight: 700;">{{ detail.sellerInitials }}</div>
+              <div>
+                <div style="font-weight: 700; font-size: 16px;">{{ detail.sellerName }}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7A6B58;">{{ detail.sellerEmail }}</div>
+              </div>
+            </div>
+            <div style="margin-bottom: 22px;">
+              <sc-if value="{{ detail.sellerVerified }}" hint-placeholder-val="{{ false }}"><span class="tm-badge">✓ {{ detail.badgeLabel }}</span></sc-if>
+              <sc-if value="{{ detail.sellerUnverified }}" hint-placeholder-val="{{ true }}"><span style="font-size: 13px; color: #55463A;">Sample listing: the seller has not verified a digital ID</span></sc-if>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #55463A; margin-bottom: 24px;">
+              <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #7A6B58;">Location</span><strong>{{ detail.location }}</strong></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #7A6B58;">Posted</span><strong>{{ detail.dateLabel }}</strong></div>
+              <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #7A6B58;">Condition</span><strong>{{ detail.condition }}</strong></div>
+            </div>
+            <button onClick="{{ messageSeller }}" style="width: 100%; border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 15px; font-size: 15px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">{{ messageCta }}</button>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #9C8F7E; text-align: center; margin-top: 12px; line-height: 1.5;">MEET IN PUBLIC · USC VILLAGE<br />OR TROJAN PLAZA</div>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPost }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width: 720px; animation: tmIn 0.25s ease both;">
+        <h2 style="font-size: 34px; font-weight: 800; letter-spacing: -0.025em; margin: 0 0 6px;">{{ postTitleLabel }}</h2>
+        <p style="font-size: 16px; color: #55463A; margin: 0 0 30px;">Your listing shows the "Verified with digital ID" badge. Anyone signed in with a usc.edu email can message you.</p>
+        <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 20px;">
+          <label style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">TITLE</span>
+            <input value="{{ form.title }}" onChange="{{ onFormTitle }}" placeholder="Twin XL mattress, barely used" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6;" />
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">CATEGORY</span>
+              <select value="{{ form.category }}" onChange="{{ onFormCat }}" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6;">
+                <sc-for list="{{ catOptions }}" as="o" hint-placeholder-count="9">
+                  <option value="{{ o.id }}">{{ o.label }}</option>
+                </sc-for>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">PRICE (USD)</span>
+              <input value="{{ form.price }}" onChange="{{ onFormPrice }}" placeholder="0" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6; font-family: 'JetBrains Mono', monospace;" />
+            </label>
+          </div>
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" checked="{{ form.free }}" onChange="{{ onFormFree }}" style="width: 18px; height: 18px; accent-color: #990000;" />
+            <span style="font-size: 15px; font-weight: 600;">Giving it away for free</span>
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">LOCATION</span>
+              <input value="{{ form.location }}" onChange="{{ onFormLoc }}" placeholder="USC Village" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6;" />
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">CONDITION</span>
+              <input value="{{ form.condition }}" onChange="{{ onFormCond }}" placeholder="Like new" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6;" />
+            </label>
+          </div>
+          <label style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">DESCRIPTION</span>
+            <textarea value="{{ form.description }}" onChange="{{ onFormDesc }}" rows="5" placeholder="Details, pickup window, why you're selling..." style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6; resize: vertical;"></textarea>
+          </label>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">PHOTO</span>
+            <div style="display: flex; gap: 14px; align-items: center;">
+              <div style="{{ form.previewStyle }}">{{ form.previewLabel }}</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <input type="file" accept="image/*" onChange="{{ onFormPhoto }}" style="font-size: 13px;" />
+                <button onClick="{{ clearPhoto }}" style="align-self: flex-start; border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer;">Remove photo</button>
+              </div>
+            </div>
+          </div>
+          <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
+            <div role="alert" style="background: #FDECEC; border: 1px solid #E9B4B4; color: #8A1414; border-radius: 10px; padding: 12px 14px; font-size: 14px;">{{ formError }}</div>
+          </sc-if>
+          <div style="display: flex; gap: 12px; padding-top: 4px;">
+            <button onClick="{{ submitListing }}" disabled="{{ posting }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 15px 30px; font-size: 15px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">{{ postCta }}</button>
+            <button onClick="{{ goBack }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 15px 26px; font-size: 15px; font-weight: 600; cursor: pointer;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isMine }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: tmIn 0.25s ease both;">
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 26px;">
+          <h2 style="font-size: 34px; font-weight: 800; letter-spacing: -0.025em; margin: 0;">My Listings</h2>
+          <div style="flex: 1; height: 1px; background: #E4DAC5;"></div>
+          <button onClick="{{ goPost }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 12px 22px; font-size: 14px; font-weight: 700; cursor: pointer;">+ New listing</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <sc-for list="{{ mine }}" as="l" hint-placeholder-count="3">
+            <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 14px; padding: 16px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">
+              <div onClick="{{ l.open }}" style="{{ l.thumbStyle }}"><sc-if value="{{ l.hasPhoto }}" hint-placeholder-val="{{ false }}"><img data-src="{{ l.photoUrl }}" ref="{{ imgRef }}" alt="{{ l.title }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" /></sc-if></div>
+              <div style="flex: 1; min-width: 200px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #990000;">{{ l.catLabel }} · {{ l.statusLabel }}</div>
+                <div style="font-weight: 700; font-size: 17px; margin: 4px 0;">{{ l.title }}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7A6B58;">{{ l.meta }} · {{ l.viewsLabel }}</div>
+              </div>
+              <div style="font-weight: 800; font-size: 18px;">{{ l.priceLabel }}</div>
+              <div style="display: flex; gap: 8px;">
+                <button onClick="{{ l.toggleSold }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 9px 15px; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">{{ l.soldCta }}</button>
+                <button onClick="{{ l.edit }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 9px 15px; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="border-color: #990000; color: #990000;">Edit</button>
+                <button onClick="{{ l.remove }}" style="border: 1px solid #E9C6C6; background: #FFFFFF; color: #990000; border-radius: 999px; padding: 9px 15px; font-size: 12.5px; font-weight: 600; cursor: pointer;" style-hover="background: #990000; color: #FFFFFF;">Delete</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ noMine }}" hint-placeholder-val="{{ false }}">
+          <div style="border: 2px dashed #E0D5BE; border-radius: 16px; padding: 56px; text-align: center;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.06em; color: #7A6B58; margin-bottom: 18px;">NOTHING_POSTED_YET</div>
+            <button onClick="{{ goPost }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 13px 26px; font-size: 14px; font-weight: 700; cursor: pointer;">Post your first listing</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isFavorites }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: tmIn 0.25s ease both;">
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 26px;">
+          <h2 style="font-size: 34px; font-weight: 800; letter-spacing: -0.025em; margin: 0;">Saved listings</h2>
+          <div style="flex: 1; height: 1px; background: #E4DAC5;"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 22px;">
+          <sc-for list="{{ favorites }}" as="l" hint-placeholder-count="3">
+            <div onClick="{{ l.open }}" style="cursor: pointer;">
+              <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #EAE1CE;">
+                <div style="{{ l.photoStyle }}"><span>{{ l.photoLabel }}</span><sc-if value="{{ l.hasPhoto }}" hint-placeholder-val="{{ false }}"><img data-src="{{ l.photoUrl }}" ref="{{ imgRef }}" alt="{{ l.title }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" /></sc-if></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 12px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #990000;">{{ l.catLabel }}</div>
+                <div style="font-weight: 800; font-size: 16px;">{{ l.priceLabel }}</div>
+              </div>
+              <div style="font-weight: 700; font-size: 15px; margin-top: 5px;">{{ l.title }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ noFavorites }}" hint-placeholder-val="{{ false }}">
+          <div style="border: 2px dashed #E0D5BE; border-radius: 16px; padding: 56px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.06em; color: #7A6B58;">NO_SAVED_LISTINGS — tap ♥ on any listing</div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width: 760px; animation: tmIn 0.25s ease both;">
+        <h2 style="font-size: 34px; font-weight: 800; letter-spacing: -0.025em; margin: 0 0 6px;">Your housing preferences</h2>
+        <p style="font-size: 16px; color: #55463A; margin: 0 0 30px; max-width: 560px; text-wrap: pretty;">Used to score every listing and every potential roommate. Only your first name and year are shown to matches.</p>
+        <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 24px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">BUDGET MIN ($/MO)</span>
+              <input value="{{ pf.budgetMin }}" onChange="{{ onPfMin }}" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6; font-family: 'JetBrains Mono', monospace;" />
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">BUDGET MAX ($/MO)</span>
+              <input value="{{ pf.budgetMax }}" onChange="{{ onPfMax }}" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6; font-family: 'JetBrains Mono', monospace;" />
+            </label>
+          </div>
+          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px;">
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">PREFERRED NEIGHBORHOOD</span>
+              <select value="{{ pf.hood }}" onChange="{{ onPfHood }}" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6;">
+                <sc-for list="{{ hoodOptions }}" as="h" hint-placeholder-count="6">
+                  <option value="{{ h.id }}">{{ h.label }}</option>
+                </sc-for>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">MAX COMMUTE (MIN)</span>
+              <input value="{{ pf.commuteMax }}" onChange="{{ onPfCommute }}" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6; font-family: 'JetBrains Mono', monospace;" />
+            </label>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">CLEANLINESS · 1 RELAXED / 5 SPOTLESS</span>
+              <div style="display: flex; gap: 8px;">
+                <sc-for list="{{ cleanScale }}" as="n" hint-placeholder-count="5">
+                  <div onClick="{{ n.pick }}" style="{{ n.style }}">{{ n.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">NOISE · 1 SILENT / 5 LIVELY</span>
+              <div style="display: flex; gap: 8px;">
+                <sc-for list="{{ noiseScale }}" as="n" hint-placeholder-count="5">
+                  <div onClick="{{ n.pick }}" style="{{ n.style }}">{{ n.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">LIFESTYLE · 1 PRIVATE / 5 SOCIAL</span>
+              <div style="display: flex; gap: 8px;">
+                <sc-for list="{{ socialScale }}" as="n" hint-placeholder-count="5">
+                  <div onClick="{{ n.pick }}" style="{{ n.style }}">{{ n.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">SLEEP SCHEDULE</span>
+            <div style="display: flex; gap: 10px;">
+              <div onClick="{{ pickEarly }}" style="{{ sleepEarlyStyle }}">Early riser</div>
+              <div onClick="{{ pickLate }}" style="{{ sleepLateStyle }}">Night owl</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; font-weight: 600;">
+              <input type="checkbox" checked="{{ pf.smoking }}" onChange="{{ onPfSmoking }}" style="width: 18px; height: 18px; accent-color: #990000;" />
+              <span>I smoke / am fine with smokers</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; font-weight: 600;">
+              <input type="checkbox" checked="{{ pf.pets }}" onChange="{{ onPfPets }}" style="width: 18px; height: 18px; accent-color: #990000;" />
+              <span>I have or want a pet</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; font-weight: 600;">
+              <input type="checkbox" checked="{{ pf.furnished }}" onChange="{{ onPfFurnished }}" style="width: 18px; height: 18px; accent-color: #990000;" />
+              <span>Furnished preferred</span>
+            </label>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">LEASE (MONTHS)</span>
+              <input value="{{ pf.lease }}" onChange="{{ onPfLease }}" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6; font-family: 'JetBrains Mono', monospace;" />
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">MOVE-IN</span>
+              <input value="{{ pf.moveIn }}" onChange="{{ onPfMoveIn }}" placeholder="Aug 15" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6;" />
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7A6B58;">BEDROOMS</span>
+              <input value="{{ pf.beds }}" onChange="{{ onPfBeds }}" style="border: 1px solid #E6DCC7; border-radius: 10px; padding: 13px 14px; font-size: 15px; background: #FDFBF6; font-family: 'JetBrains Mono', monospace;" />
+            </label>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button onClick="{{ saveProfile }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 15px 30px; font-size: 15px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">Save &amp; see my matches</button>
+            <button onClick="{{ goBack }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 15px 26px; font-size: 15px; font-weight: 600; cursor: pointer;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isRoommates }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: tmIn 0.25s ease both;">
+        <div style="display: flex; align-items: flex-end; gap: 24px; margin-bottom: 26px;">
+          <div>
+            <h2 style="font-size: 34px; font-weight: 800; letter-spacing: -0.025em; margin: 0 0 4px;">Roommate matches</h2>
+            <div style="font-size: 16px; color: #55463A;">Sample roommate profiles, ranked by how well they fit your preferences</div>
+          </div>
+          <div style="flex: 1; height: 1px; background: #E4DAC5; margin-bottom: 8px;"></div>
+          <button onClick="{{ goProfile }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 11px 20px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-bottom: 2px;" style-hover="border-color: #990000; color: #990000;">Edit preferences</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <sc-for list="{{ matches }}" as="m" hint-placeholder-count="5">
+            <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 22px 24px;">
+              <div style="display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap;">
+                <div style="{{ m.ringStyle }}">{{ m.score }}</div>
+                <div style="flex: 1; min-width: 260px;">
+                  <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+                    <div style="font-weight: 800; font-size: 19px;">{{ m.name }}</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7A6B58;">{{ m.year }}</div>
+                  </div>
+                  <p style="font-size: 15.5px; line-height: 1.5; color: #3C3026; margin: 8px 0 0; text-wrap: pretty;">{{ m.summary }}</p>
+                  <p style="font-size: 14.5px; line-height: 1.5; color: #6B5B4A; margin: 8px 0 0;">{{ m.bio }}</p>
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;">
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ m.budgetLabel }}</div>
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ m.hood }}</div>
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ m.sleepLabel }}</div>
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ m.cleanLabel }}</div>
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ m.socialLabel }}</div>
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ m.petsLabel }}</div>
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ m.smokeLabel }}</div>
+                    <div style="background: #F4EEE1; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; color: #55463A;">{{ m.leaseLabel }}</div>
+                  </div>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 22px; margin-top: 14px;">
+                    <sc-for list="{{ m.strong }}" as="s" hint-placeholder-count="3">
+                      <div style="font-size: 14px; color: #2F5D3A;">✓ {{ s.text }}</div>
+                    </sc-for>
+                    <sc-for list="{{ m.weak }}" as="w" hint-placeholder-count="1">
+                      <div style="font-size: 14px; color: #8A1414;">✕ {{ w.text }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+                <button onClick="{{ m.message }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 13px 24px; font-size: 14px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">Message</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isForYou }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: tmIn 0.25s ease both;">
+        <div style="display: flex; align-items: flex-end; gap: 24px; margin-bottom: 26px;">
+          <div>
+            <h2 style="font-size: 34px; font-weight: 800; letter-spacing: -0.025em; margin: 0 0 4px;">Recommended for you</h2>
+            <div style="font-size: 16px; color: #55463A;">Ranked by simple rules from your preferences, the listings you open, and what you save or skip</div>
+          </div>
+          <div style="flex: 1; height: 1px; background: #E4DAC5; margin-bottom: 8px;"></div>
+          <button onClick="{{ goProfile }}" style="border: 1px solid #E6DCC7; background: #FFFFFF; border-radius: 999px; padding: 11px 20px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-bottom: 2px;" style-hover="border-color: #990000; color: #990000;">Edit preferences</button>
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: #7A6B58; margin-bottom: 16px;">TOP 5 LISTINGS</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 22px; margin-bottom: 46px;">
+          <sc-for list="{{ recs }}" as="l" hint-placeholder-count="5">
+            <div onClick="{{ l.open }}" style="cursor: pointer;">
+              <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #EAE1CE;">
+                <div style="{{ l.matchStyle }}">{{ l.matchLabel }}</div>
+                <div style="{{ l.photoStyle }}"><span>{{ l.photoLabel }}</span><sc-if value="{{ l.hasPhoto }}" hint-placeholder-val="{{ false }}"><img data-src="{{ l.photoUrl }}" ref="{{ imgRef }}" alt="{{ l.title }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" /></sc-if></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 12px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #990000;">{{ l.catLabel }}</div>
+                <div style="font-weight: 800; font-size: 16px;">{{ l.priceLabel }}</div>
+              </div>
+              <div style="font-weight: 700; font-size: 15px; margin-top: 5px; line-height: 1.3;">{{ l.title }}</div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7A6B58;">{{ l.meta }}</div>
+                <button onClick="{{ l.skip }}" style="border: 0; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; color: #9C8F7E; cursor: pointer; padding: 2px 4px;" style-hover="color: #990000;">NOT_FOR_ME</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: #7A6B58; margin-bottom: 16px;">TOP 3 ROOMMATES</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+          <sc-for list="{{ recRoommates }}" as="r" hint-placeholder-count="3">
+            <div onClick="{{ r.open }}" style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 22px; display: flex; gap: 16px; align-items: center; cursor: pointer;" style-hover="border-color: #FFC72C;">
+              <div style="width: 52px; height: 52px; border-radius: 50%; background: #241A12; color: #FFC72C; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; flex-shrink: 0;">{{ r.initials }}</div>
+              <div style="flex: 1;">
+                <div style="font-weight: 800; font-size: 17px;">{{ r.name }}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7A6B58; margin-top: 2px;">{{ r.year }}</div>
+                <div style="font-size: 14px; color: #55463A; margin-top: 6px;">{{ r.reason }}</div>
+              </div>
+              <div style="font-size: 22px; font-weight: 900; color: #990000;">{{ r.score }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isMessages }}" hint-placeholder-val="{{ false }}">
+      <div style="animation: tmIn 0.25s ease both;">
+        <h2 style="font-size: 34px; font-weight: 800; letter-spacing: -0.025em; margin: 0 0 22px;">Messages</h2>
+        <div class="tm-stack" style="display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 20px; align-items: start;">
+          <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; overflow: hidden;">
+            <sc-for list="{{ threads }}" as="t" hint-placeholder-count="3">
+              <div onClick="{{ t.open }}" style="{{ t.rowStyle }}">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <div style="width: 34px; height: 34px; border-radius: 50%; background: #241A12; color: #FFC72C; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; flex-shrink: 0;">{{ t.initials }}</div>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 700; font-size: 14px;">{{ t.name }}<sc-if value="{{ t.verified }}" hint-placeholder-val="{{ false }}"> <span class="tm-badge" style="margin-left: 4px;">✓ ID</span></sc-if></div>
+                    <div style="font-size: 12.5px; color: #7A6B58; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ t.preview }}</div>
+                  </div>
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #9C8F7E;">{{ t.time }}</div>
+                </div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; color: #990000; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">RE: {{ t.listingTitle }}</div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noThreads }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 40px 20px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #7A6B58;">NO_CONVERSATIONS</div>
+            </sc-if>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; display: flex; flex-direction: column; height: 560px;">
+            <sc-if value="{{ hasThread }}" hint-placeholder-val="{{ true }}">
+              <div style="padding: 16px 20px; border-bottom: 1px solid #EFE7D7; display: flex; align-items: center; gap: 12px;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: #990000; color: #FFC72C; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;">{{ activeThread.initials }}</div>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; font-size: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">{{ activeThread.name }}<sc-if value="{{ activeThread.verified }}" hint-placeholder-val="{{ false }}"><span class="tm-badge">✓ {{ activeThread.badgeLabel }}</span></sc-if></div>
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #7A6B58;">{{ activeThread.status }}</div>
+                </div>
+                <button onClick="{{ openThreadListing }}" style="border: 1px solid #E6DCC7; background: #FDFBF6; border-radius: 999px; padding: 8px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;">View listing</button>
+              </div>
+              <div ref="{{ scrollRef }}" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #FDFBF6;">
+                <sc-for list="{{ activeMessages }}" as="m" hint-placeholder-count="4">
+                  <div style="{{ m.rowStyle }}">
+                    <div style="{{ m.bubbleStyle }}">{{ m.text }}</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #9C8F7E; margin-top: 4px;">{{ m.time }}</div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ typing }}" hint-placeholder-val="{{ false }}">
+                  <div style="align-self: flex-start; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7A6B58; background: #F1EBDF; border-radius: 12px; padding: 9px 13px;">typing…</div>
+                </sc-if>
+              </div>
+              <div style="padding: 14px; border-top: 1px solid #EFE7D7; display: flex; gap: 10px;">
+                <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" aria-label="Message" placeholder="Message…" style="flex: 1; border: 1px solid #E6DCC7; border-radius: 999px; padding: 13px 18px; font-size: 15px; background: #FDFBF6;" />
+                <button onClick="{{ sendMessage }}" style="border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 13px 26px; font-size: 14px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">Send</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ noThread }}" hint-placeholder-val="{{ false }}">
+              <div style="flex: 1; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; letter-spacing: 0.06em; color: #7A6B58;">SELECT_A_CONVERSATION</div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isVerify }}" hint-placeholder-val="{{ false }}">
+      <section aria-labelledby="tm-verify-title" style="max-width: 760px; animation: tmIn 0.25s ease both;">
+        <h2 id="tm-verify-title" style="font-size: 34px; font-weight: 800; letter-spacing: -0.025em; margin: 0 0 6px;">Verify with digital ID</h2>
+        <p style="font-size: 16px; color: #453729; margin: 0 0 22px; max-width: 620px; line-height: 1.55;">Posting listings and housing needs a verified digital ID, such as a mobile driver's license in your phone wallet. We check the issuer's signature and that the name matches your account. We keep only your name, the issuer and the time of the check, never your birth date or document number.</p>
+
+        <sc-if value="{{ vf.demo }}" hint-placeholder-val="{{ true }}">
+          <div role="note" style="border: 2px solid #8A5A00; background: #FFF4D6; color: #3D2A00; border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; font-size: 14.5px; line-height: 1.5;">
+            <strong>Demo verification.</strong> This server has no Credence ID license configured, so no real ID is read. Badges earned here are labelled "demo".
+          </div>
+        </sc-if>
+        <sc-if value="{{ vf.disabled }}" hint-placeholder-val="{{ false }}">
+          <div role="alert" style="border: 1px solid #E9B4B4; background: #FDECEC; color: #8A1414; border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; font-size: 14.5px;">Digital ID verification is not configured on this server.</div>
+        </sc-if>
+
+        <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 22px 24px; margin-bottom: 18px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #55463A; margin-bottom: 10px;">YOUR ACCOUNT</div>
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px;">
+            <div style="font-weight: 800; font-size: 18px;">{{ vf.displayName }}</div>
+            <sc-if value="{{ meVerified }}" hint-placeholder-val="{{ false }}"><span class="tm-badge">✓ {{ meBadgeLabel }}</span></sc-if>
+            <sc-if value="{{ meUnverified }}" hint-placeholder-val="{{ true }}"><span style="font-size: 13px; font-weight: 700; color: #8A1414;">Not verified: browse and message only</span></sc-if>
+          </div>
+          <sc-if value="{{ meVerified }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size: 14px; color: #453729; line-height: 1.6; margin-bottom: 14px;">{{ vf.recordLabel }}</div>
+          </sc-if>
+          <label for="tm-name" style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px;">Account name (must match your ID)</label>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input id="tm-name" autocomplete="name" value="{{ vf.nameDraft }}" onChange="{{ onNameDraft }}" style="flex: 1 1 220px; min-height: 44px; border: 1px solid #C9BBA0; border-radius: 10px; padding: 10px 14px; font-size: 15px; background: #FDFBF6;" />
+            <button onClick="{{ saveName }}" class="tm-btn" style="border: 1px solid #241A12; background: #FFFFFF; color: #241A12; border-radius: 999px; padding: 0 20px; font-size: 14px; font-weight: 700; cursor: pointer;">Save name</button>
+          </div>
+          <div style="font-size: 13px; color: #55463A; margin-top: 6px;">Changing your name removes an existing badge until you verify again.</div>
+        </div>
+
+        <sc-if value="{{ vf.showScenarios }}" hint-placeholder-val="{{ true }}">
+          <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 18px 24px; margin-bottom: 18px;">
+            <label for="tm-scenario" style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px;">Demo: what the simulated wallet returns</label>
+            <select id="tm-scenario" value="{{ vf.scenario }}" onChange="{{ onScenario }}" style="width: 100%; min-height: 44px; border: 1px solid #C9BBA0; border-radius: 10px; padding: 8px 12px; font-size: 15px; background: #FDFBF6;">
+              <sc-for list="{{ vf.scenarios }}" as="o" hint-placeholder-count="6">
+                <option value="{{ o.id }}">{{ o.label }}</option>
+              </sc-for>
+            </select>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ vf.canStart }}" hint-placeholder-val="{{ true }}">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 18px;">
+            <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-weight: 800; font-size: 17px;">Wallet on this device</div>
+              <div style="font-size: 14px; color: #453729; line-height: 1.5;">{{ vf.dcHint }}</div>
+              <button onClick="{{ startDc }}" disabled="{{ vf.dcDisabled }}" class="tm-btn" style="{{ vf.dcStyle }}">Verify with digital ID</button>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-weight: 800; font-size: 17px;">Wallet on your phone</div>
+              <label for="tm-qrflow" style="font-size: 14px; color: #453729;">Scan a QR code or open a link with</label>
+              <select id="tm-qrflow" value="{{ vf.qrFlow }}" onChange="{{ onQrFlow }}" style="min-height: 44px; border: 1px solid #C9BBA0; border-radius: 10px; padding: 8px 12px; font-size: 15px; background: #FDFBF6;">
+                <option value="mdoc">Samsung Wallet or another ISO mdoc wallet</option>
+                <option value="w3c">State mDL app (W3C credential)</option>
+              </select>
+              <button onClick="{{ startQr }}" class="tm-btn" style="border: 1px solid #990000; background: #FFFFFF; color: #990000; border-radius: 999px; padding: 0 20px; font-size: 15px; font-weight: 700; cursor: pointer;">Show QR code</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <div aria-live="polite" role="status">
+          <sc-if value="{{ vf.isPending }}" hint-placeholder-val="{{ false }}">
+            <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 20px 24px; font-size: 15px;"><strong>Waiting for your wallet…</strong> Approve the request in the wallet sheet.</div>
+          </sc-if>
+          <sc-if value="{{ vf.isQr }}" hint-placeholder-val="{{ false }}">
+            <div style="background: #FFFFFF; border: 1px solid #EAE1CE; border-radius: 16px; padding: 22px 24px; display: flex; gap: 22px; flex-wrap: wrap; align-items: center;">
+              <img data-src="{{ vf.qrSrc }}" ref="{{ imgRef }}" alt="QR code. Scan it with your wallet app, or use the Open in wallet link." width="220" height="220" style="width: 220px; height: 220px; image-rendering: pixelated; border: 1px solid #EAE1CE; border-radius: 8px; background: #FFFFFF;" />
+              <div style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="font-weight: 800; font-size: 17px;">Scan with your phone's wallet</div>
+                <div style="font-size: 14.5px; color: #453729; line-height: 1.5;">Waiting for the wallet to respond. This page checks every two seconds.</div>
+                <a href="{{ vf.walletUri }}" class="tm-btn" style="display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: #990000; color: #FFF8E7; font-weight: 700; padding: 0 20px; text-decoration: none;">Open in wallet app</a>
+                <button onClick="{{ cancelVerify }}" class="tm-btn" style="border: 1px solid #C9BBA0; background: #FFFFFF; color: #241A12; border-radius: 999px; padding: 0 20px; font-size: 14px; font-weight: 700; cursor: pointer;">Cancel</button>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ vf.isSuccess }}" hint-placeholder-val="{{ false }}">
+            <div tabindex="-1" ref="{{ resultRef }}" style="background: #E7F1E9; border: 1px solid #9CC3A6; color: #1E4D2B; border-radius: 16px; padding: 20px 24px;">
+              <div style="font-weight: 800; font-size: 18px; margin-bottom: 6px;">You are verified.</div>
+              <div style="font-size: 15px; margin-bottom: 14px;">Your listings and housing posts now show the badge.</div>
+              <button onClick="{{ afterVerify }}" class="tm-btn" style="border: 0; background: #1E4D2B; color: #FFFFFF; border-radius: 999px; padding: 0 22px; font-size: 15px; font-weight: 700; cursor: pointer;">{{ vf.nextLabel }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ vf.isCancelled }}" hint-placeholder-val="{{ false }}">
+            <div tabindex="-1" ref="{{ resultRef }}" style="background: #FFF4D6; border: 1px solid #C99A2E; color: #3D2A00; border-radius: 16px; padding: 20px 24px;">
+              <div style="font-weight: 800; font-size: 17px; margin-bottom: 4px;">Verification cancelled</div>
+              <div style="font-size: 15px;">{{ vf.message }} You can try again whenever you are ready.</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ vf.isFailed }}" hint-placeholder-val="{{ false }}">
+            <div tabindex="-1" ref="{{ resultRef }}" style="background: #FDECEC; border: 1px solid #E9B4B4; color: #7A1010; border-radius: 16px; padding: 20px 24px;">
+              <div style="font-weight: 800; font-size: 17px; margin-bottom: 4px;">Verification failed</div>
+              <div style="font-size: 15px;">{{ vf.message }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+    </sc-if>
+
+  </main>
+
+  <footer style="border-top: 1px solid #EAE1CE; background: #FBF6EA;">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 30px 24px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: center;">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: 0.08em; color: #6B5C49;">TROJAN MARKET · FOR USC STUDENTS</div>
+      <div style="font-size: 13px; color: #55463A;">Sample listings are illustrative. Not affiliated with the University of Southern California.</div>
+    </div>
+  </footer>
+
+  <sc-if value="{{ authOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeAuth }}" style="position: fixed; inset: 0; background: rgba(20,14,8,0.55); display: grid; place-items: center; z-index: 90; padding: 20px;">
+      <div onClick="{{ stop }}" role="dialog" aria-modal="true" aria-label="Sign in" style="background: #FDF9F0; border-radius: 20px; width: 100%; max-width: 440px; padding: 34px; animation: tmIn 0.2s ease both;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 22px;">
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: #990000; color: #FFC72C; display: grid; place-items: center; font-weight: 900; font-style: italic;">T</div>
+          <div style="font-weight: 800; font-size: 16px;">TROJAN MARKET</div>
+        </div>
+        <sc-if value="{{ authStepEmail }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <h3 style="font-size: 25px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px;">Sign in with your USC email</h3>
+            <p style="font-size: 15px; color: #55463A; line-height: 1.5; margin: 0 0 22px;">A <strong>@usc.edu</strong> address lets you browse, save and message. We'll send a 6-digit code.</p>
+            <label for="tm-auth-email" style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px;">USC email</label>
+            <input id="tm-auth-email" type="email" autocomplete="email" ref="{{ autoFocus }}" value="{{ authEmail }}" onChange="{{ onAuthEmail }}" onKeyDown="{{ onAuthKey }}" placeholder="ttrojan@usc.edu" style="width: 100%; border: 1px solid #E6DCC7; border-radius: 10px; padding: 14px; font-size: 15px; background: #FFFFFF; margin-bottom: 12px;" />
+            <sc-if value="{{ authError }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" style="background: #FDECEC; border: 1px solid #E9B4B4; color: #8A1414; border-radius: 10px; padding: 11px 13px; font-size: 13.5px; margin-bottom: 12px;">{{ authError }}</div>
+            </sc-if>
+            <button onClick="{{ sendCode }}" disabled="{{ authBusy }}" style="width: 100%; border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 15px; font-size: 15px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">Send code</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ authStepCode }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <h3 style="font-size: 25px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px;">Enter your code</h3>
+            <p style="font-size: 15px; color: #55463A; line-height: 1.5; margin: 0 0 8px;">Sent to <strong>{{ authEmail }}</strong>.</p>
+            <sc-if value="{{ hasDemoCode }}" hint-placeholder-val="{{ false }}">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5C4100; background: #FDF1D2; border: 1px solid #F0C64B; border-radius: 8px; padding: 9px 12px; margin-bottom: 18px;">Local development code: {{ demoCode }}</div>
+            </sc-if>
+            <label for="tm-auth-code" style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px;">6-digit code</label>
+            <input id="tm-auth-code" inputmode="numeric" autocomplete="one-time-code" ref="{{ autoFocus }}" value="{{ authCode }}" onChange="{{ onAuthCode }}" onKeyDown="{{ onAuthKey }}" placeholder="000000" style="width: 100%; border: 1px solid #E6DCC7; border-radius: 10px; padding: 14px; font-size: 22px; letter-spacing: 0.4em; text-align: center; font-family: 'JetBrains Mono', monospace; background: #FFFFFF; margin-bottom: 12px;" />
+            <sc-if value="{{ authError }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" style="background: #FDECEC; border: 1px solid #E9B4B4; color: #8A1414; border-radius: 10px; padding: 11px 13px; font-size: 13.5px; margin-bottom: 12px;">{{ authError }}</div>
+            </sc-if>
+            <button onClick="{{ verifyCode }}" disabled="{{ authBusy }}" style="width: 100%; border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 15px; font-size: 15px; font-weight: 700; cursor: pointer;" style-hover="background: #7A0000;">Verify &amp; continue</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ reportOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeReport }}" style="position: fixed; inset: 0; background: rgba(20,14,8,0.55); display: grid; place-items: center; z-index: 90; padding: 20px;">
+      <div onClick="{{ stop }}" style="background: #FDF9F0; border-radius: 20px; width: 100%; max-width: 440px; padding: 32px; animation: tmIn 0.2s ease both;">
+        <h3 style="font-size: 23px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px;">Report this listing</h3>
+        <p style="font-size: 14.5px; color: #55463A; margin: 0 0 20px;">Reports go to student moderators. Abuse of reporting is tracked.</p>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px;">
+          <sc-for list="{{ reportReasons }}" as="r" hint-placeholder-count="4">
+            <div onClick="{{ r.pick }}" style="{{ r.style }}">{{ r.label }}</div>
+          </sc-for>
+        </div>
+        <button onClick="{{ submitReport }}" style="width: 100%; border: 0; background: #241A12; color: #FDF9F0; border-radius: 999px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer;">Submit report</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: #241A12; color: #FDF9F0; border-radius: 999px; padding: 14px 26px; font-size: 14px; font-weight: 600; z-index: 95; animation: tmIn 0.2s ease both; box-shadow: 0 12px 30px rgba(0,0,0,0.22);">{{ toast }}</div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+const CATS = [
+  { id: 'housing', label: 'Housing & subleases', icon: '🏠', tone: '#EFE3D2' },
+  { id: 'furniture', label: 'Desks, chairs & furniture', icon: '🪑', tone: '#E9E4D6' },
+  { id: 'movein', label: 'Move-in essentials', icon: '🧺', tone: '#EEE6D6' },
+  { id: 'electronics', label: 'Electronics', icon: '💻', tone: '#E4E6E8' },
+  { id: 'textbooks', label: 'Textbooks', icon: '📚', tone: '#E8E2D0' },
+  { id: 'bikes', label: 'Bikes & Scooters', icon: '🛴', tone: '#E3E7E2' },
+  { id: 'tickets', label: 'Tickets', icon: '🎟️', tone: '#F2E2E2' },
+  { id: 'services', label: 'Services', icon: '🛠️', tone: '#E6E4E0' },
+  { id: 'free', label: 'Free Stuff', icon: '🎁', tone: '#F6E9C9' },
+  { id: 'other', label: 'Other', icon: '✨', tone: '#EDE8DC' }
+];
+
+const NAMES = ['Maya Rodriguez', 'Devin Park', 'Aisha Bello', 'Chris Nguyen', 'Priya Shah', 'Jordan Lee', 'Sam Ortiz', 'Ava Kim', 'Noah Patel', 'Lucia Marín', 'Eli Brooks', 'Hana Sato', 'Marcus Hall', 'Tessa Yang', 'Omar Haddad', 'Grace Liu', 'Diego Flores', 'Nina Kaur', 'Ryan Boyle', 'Zoe Alvarez'];
+
+const RAW = {
+  housing: [
+    ['Sublease: 1BR at Icon Plaza, Aug–Dec', 1450, 'apartment', 'Icon Plaza', 'Furnished', 'Fully furnished 1BR in a 4-bed suite. Utilities and gym included, 8 min walk to Leavey. Lease transfer handled through the building office.'],
+    ['Room near HSC with private bath', 1100, 'bedroom', 'HSC / Eastlake', 'Unfurnished', 'Quiet house share with two Keck students. Street parking, laundry in unit, 10 min on the HSC shuttle.'],
+    ['Studio at The Lorenzo, spring only', 1725, 'apartment', 'The Lorenzo', 'Furnished', 'Spring semester takeover. Pool, gym and campus shuttle. Deposit already paid.'],
+    ['Shared 2BR on 30th Street', 950, 'house', '30th Street', 'Partly furnished', 'Walking distance to the Row and campus. Roommate is a Viterbi junior. Utilities split three ways.'],
+    ['Gateway Apartments, 1 of 2 rooms', 1290, 'balcony', 'Gateway Apartments', 'Furnished', 'Right across Figueroa. In-unit washer, doorman, 24/7 study lounge downstairs.'],
+    ['Summer sublet in Cardinal Gardens', 780, 'apartment', 'Cardinal Gardens', 'Furnished', 'May through August. USC housing, so billing goes straight through the portal.'],
+    ['Room in a house on Ellendale', 1025, 'bedroom', 'Ellendale Pl', 'Unfurnished', 'Big room with two windows, backyard, three grad students in the house. DPS patrol route.'],
+    ['Parkside apartment spot, fall', 1180, 'dormitory', 'Parkside', 'Furnished', 'On-campus, meal plan optional, closest housing to Viterbi classes.'],
+    ['2BR near USC Village, 12-mo lease', 2400, 'kitchen', 'USC Village area', 'Unfurnished', 'Whole unit for two people, remodeled kitchen, gated parking spot included.'],
+    ['Vermont Ave loft, roommate wanted', 1150, 'loft', 'Vermont Ave', 'Furnished', 'High ceilings, exposed brick, walk to Expo line. Looking for a clean, quiet roommate.']
+  ],
+  furniture: [
+    ['IKEA desk + chair, moving out', 0, 'desk', 'USC Village', 'Good', 'Free to a good home. Must pick up Saturday before 4pm — flying out Sunday.'],
+    ['Twin XL mattress, barely used', 85, 'mattress', 'Fluor Tower', 'Like new', 'Used one semester with a protector the whole time. Fits all USC dorm beds.'],
+    ['Grey two-seat couch', 140, 'sofa', '30th Street', 'Good', 'Comfortable, no stains, one small scuff on the back leg. You will need a truck.'],
+    ['Standing desk, electric lift', 190, 'desk', 'Icon Plaza', 'Excellent', 'Dual motor, memory presets, quiet. Great for long problem sets.'],
+    ['Bookshelf, 5 shelves', 45, 'bookshelf', 'Cardinal Gardens', 'Good', 'Solid pine, holds a full semester of textbooks. Easy to disassemble.'],
+    ['Full-length mirror with stand', 30, 'mirror', 'The Lorenzo', 'Very good', 'No cracks or cloudiness. Leans or mounts on a wall.'],
+    ['Desk lamp + LED strip set', 18, 'lamp', 'Birnkrant', 'Good', 'Warm and cool modes, USB port in the base. Strip has adhesive left.'],
+    ['Nightstand, two drawers', 35, 'drawers', 'Parkside', 'Good', 'Matches most dorm furniture. Drawers slide clean.'],
+    ['Rug 5x7, low pile', 55, 'rug', 'Gateway Apartments', 'Clean', 'Professionally cleaned last month. Makes a dorm floor bearable.'],
+    ['Dining table + 2 chairs', 120, 'table', 'Ellendale Pl', 'Very good', 'Small footprint, perfect for a shared apartment kitchen.']
+  ],
+  electronics: [
+    ['MacBook Air M1, 256GB', 520, 'macbook', 'Leavey Library', 'Excellent', 'Battery health 91%, no dents, charger and sleeve included. Upgrading for a design internship.'],
+    ['iPad 9th gen + Apple Pencil', 285, 'ipad', 'Doheny Library', 'Very good', 'Best note-taking setup for lecture. Screen protector on since day one.'],
+    ['27" 1440p monitor, 144Hz', 165, 'monitor', 'Ronald Tutor Hall', 'Like new', 'HDMI and DisplayPort cables included. No dead pixels.'],
+    ['Sony WH-1000XM4 headphones', 175, 'headphones', 'USC Village', 'Good', 'Noise cancelling still excellent — a lifesaver during finals week in Leavey.'],
+    ['Mechanical keyboard, hot-swap', 70, 'keyboard', 'Fluor Tower', 'Excellent', 'Brown switches, wired or 2.4G, extra keycaps in the box.'],
+    ['Canon EOS M50 + 15-45mm', 380, 'camera', 'Annenberg', 'Very good', 'Great for Annenberg video assignments. Two batteries and a 64GB card.'],
+    ['Anker 100W charger + cables', 32, 'charger', 'Trousdale Pkwy', 'Like new', 'Charges a laptop and phone at once. Two USB-C cables included.'],
+    ['Logitech webcam 1080p', 28, 'webcam', 'Birnkrant', 'Good', 'Clean audio, clip mounts on any monitor. For hybrid classes.'],
+    ['Bluetooth speaker, waterproof', 45, 'speaker', 'McCarthy Quad', 'Very good', 'Loud enough for the Row, survived a full year of pool days.'],
+    ['Portable SSD 1TB, USB-C', 68, 'harddrive', 'Viterbi / RTH', 'Excellent', 'Fast enough to edit 4K straight off the drive. Barely used.']
+  ],
+  textbooks: [
+    ['BUAD 304 + WRIT 150 bundle', 45, 'textbook', 'Tommy Trojan', 'Light highlighting', 'Both current editions. Access codes already used, books only.'],
+    ['CSCI 104 data structures text', 38, 'books', 'Ronald Tutor Hall', 'Good', 'Some pencil notes in the graph chapters, otherwise clean.'],
+    ['MATH 226 calculus, 9th ed', 42, 'mathematics', 'Kaprielian Hall', 'Very good', 'Spine intact, no writing. Includes the solutions supplement.'],
+    ['CHEM 105 lab manual + goggles', 30, 'chemistry', 'Seeley Mudd', 'Used', 'Manual has blank pages left. Goggles washed and unscratched.'],
+    ['ECON 203 principles text', 35, 'economics', 'Leavey Library', 'Good', 'Highlighting in the first three chapters only.'],
+    ['BISC 220 biology bundle', 55, 'biology', 'HSC / Eastlake', 'Very good', 'Textbook plus study guide. Sold together only.'],
+    ['PSYC 100 intro psychology', 28, 'psychology', 'Doheny Library', 'Good', 'Current edition, no missing pages.'],
+    ['ITP 115 Python workbook', 22, 'python', 'Viterbi / RTH', 'Like new', 'Barely opened — I ended up using online notes.'],
+    ['ACCT 410 with practice sets', 60, 'accounting', 'Marshall / JFF', 'Good', 'Practice sets unwritten. Big saver over the bookstore price.'],
+    ['Communication theory reader', 25, 'library', 'Annenberg', 'Good', 'Annenberg course reader, current syllabus edition.']
+  ],
+  bikes: [
+    ['Xiaomi scooter, 25mi range', 210, 'scooter', 'Parkside', 'Very good', 'Two years old, new tires in June. Folds for dorm storage. Helmet and cable lock included.'],
+    ['Single-speed commuter bike', 130, 'bicycle', 'USC Village', 'Good', 'Light, fast across campus, freshly tuned at the bike co-op.'],
+    ['Hybrid bike, 21-speed', 185, 'bicycle', 'Cardinal Gardens', 'Excellent', 'Handles the hills to HSC easily. New brake pads.'],
+    ['Segway Ninebot F30', 260, 'scooter', 'Fluor Tower', 'Very good', 'App-locked, 18mph top speed, charger included.'],
+    ['Folding bike for dorm rooms', 155, 'bicycle', 'Birnkrant', 'Good', 'Folds under a desk — no bike rack roulette.'],
+    ['Mountain bike, front suspension', 175, 'mountainbike', 'Ellendale Pl', 'Good', 'Rides fine on campus and on trails on weekends.'],
+    ['Kids-size road bike (adult small)', 95, 'bike', '30th Street', 'Fair', 'Good for riders under 5\'4". Needs new bar tape.'],
+    ['U-lock + cable, Kryptonite', 25, 'padlock', 'Trousdale Pkwy', 'Like new', 'The lock DPS actually recommends. Two keys.'],
+    ['Skateboard, cruiser deck', 48, 'skateboard', 'McCarthy Quad', 'Good', 'Smooth wheels for Trousdale. Grip tape still fresh.'],
+    ['Helmet + front and rear lights', 20, 'helmet', 'Gateway Apartments', 'Very good', 'Required if you ride at night. Lights are USB rechargeable.']
+  ],
+  tickets: [
+    ['2 tickets: USC vs UCLA, sec 208', 180, 'stadium', 'LA Coliseum', 'Digital transfer', 'Pair of seats on the aisle. Ticketmaster transfer within an hour of payment.'],
+    ['Student section football ticket', 65, 'football', 'LA Coliseum', 'Digital transfer', 'One seat in the student section. Face value, no markup.'],
+    ['Basketball vs Arizona, lower bowl', 55, 'basketball', 'Galen Center', 'Digital transfer', 'Great sightline behind the bench.'],
+    ['Volleyball season pass, half', 40, 'volleyball', 'Galen Center', 'Digital transfer', 'Remaining home matches this semester.'],
+    ['Springfest wristband', 45, 'concert', 'McCarthy Quad', 'Wristband', 'Cannot go anymore — meeting on campus to hand it over.'],
+    ['Comedy night at Bovard, 2 seats', 30, 'theatre', 'Bovard Auditorium', 'Digital transfer', 'Row H center. Selling both together.'],
+    ['LA Phil student night ticket', 22, 'orchestra', 'Downtown LA', 'Digital transfer', 'Walt Disney Concert Hall, student pricing already applied.'],
+    ['Dodgers vs Giants, upper deck', 38, 'baseball', 'Dodger Stadium', 'Digital transfer', 'Two seats together, easy Metro ride from campus.'],
+    ['Baseball vs Stanford, 4 seats', 48, 'baseball', 'Dedeaux Field', 'Digital transfer', 'Family bought too many. Selling all four as a set.'],
+    ['Formal ticket, spring semester', 70, 'party', 'USC Village', 'Transfer', 'Includes bus and dinner. Name change is allowed until Friday.']
+  ],
+  services: [
+    ['Calc tutoring, MATH 125/126', 30, 'studying', 'Doheny or online', 'Hourly', 'Math major, three semesters as a course grader. First 30 minutes free.'],
+    ['Resume + LinkedIn review', 25, 'resume', 'Online', 'Per review', 'Marshall senior with recruiting experience. 48-hour turnaround.'],
+    ['Headshots for LinkedIn', 60, 'portrait', 'USC Village', 'Per session', '30-minute shoot on campus, 8 edited photos delivered.'],
+    ['Move-out help with a truck', 55, 'truck', 'Anywhere near UPC', 'Per trip', 'Pickup truck, two people, one hour of loading. Weekends only.'],
+    ['CS 170 / 104 study coaching', 35, 'coding', 'RTH or online', 'Hourly', 'Not doing your homework — walking you through the concepts.'],
+    ['Spanish conversation practice', 20, 'coffee', 'Leavey Library', 'Hourly', 'Native speaker, patient with beginners. Great before an exam.'],
+    ['Haircuts in USC Village', 22, 'barber', 'USC Village', 'Per cut', 'Licensed, three years cutting. Fades and trims, cash or Venmo.'],
+    ['Ride to LAX, shared', 25, 'airport', 'Campus pickup', 'Per seat', 'Breaks and holidays. Two bags per person, 3 seats available.'],
+    ['Essay proofreading, WRIT 150', 18, 'writing', 'Online', 'Per essay', 'Grammar, structure and clarity. No ghostwriting.'],
+    ['Guitar lessons for beginners', 28, 'guitar', 'Thornton area', 'Hourly', 'Thornton student. Bring your own guitar or use mine in the room.']
+  ],
+  free: [
+    ['Free moving boxes + bubble wrap', 0, 'boxes', 'Cardinal Gardens', 'Used once', 'About 12 boxes in good shape. Take all or some.'],
+    ['Free plants, need a new window', 0, 'plant', 'Icon Plaza', 'Healthy', 'Pothos and a snake plant. Pots included.'],
+    ['Free textbooks, mixed GE courses', 0, 'books', 'Leavey Library', 'Used', 'Whatever is left after Friday goes to the library donation bin.'],
+    ['Free mini shelf and hangers', 0, 'hangers', 'Fluor Tower', 'Good', 'Dorm closet leftovers. First to message gets it.'],
+    ['Free desk chair, one wobbly wheel', 0, 'chair', 'Parkside', 'Fair', 'Honest listing: the wheel wobbles. Otherwise fine to sit in.'],
+    ['Free kitchenware set', 0, 'kitchen', 'Ellendale Pl', 'Good', 'Two pans, plates, cutlery. Graduating and cannot ship it.'],
+    ['Free full-length mirror', 0, 'mirror', 'The Lorenzo', 'Good', 'Small chip on the frame, glass is perfect.'],
+    ['Free clothes, size M', 0, 'clothes', 'USC Village', 'Washed', 'Hoodies, tees and two jackets. Bring your own bag.'],
+    ['Free printer, ink low', 0, 'printer', 'Birnkrant', 'Works', 'Prints fine. Cartridges are cheap online.'],
+    ['Free futon, needs two people', 0, 'futon', '30th Street', 'Good', 'Free if you can carry it down one flight of stairs tonight.']
+  ],
+  other: [
+    ['Mini fridge, dorm legal', 55, 'refrigerator', 'New North', 'Works great', 'Clean, cools fast, small freezer compartment. Pickup at the lobby.'],
+    ['Microwave, 700W', 35, 'microwave', 'Fluor Tower', 'Good', 'Fits a dorm counter and passes housing rules.'],
+    ['USC hoodie, cardinal, size L', 30, 'hoodie', 'USC Village', 'Like new', 'Official bookstore hoodie, worn twice.'],
+    ['Air fryer, 4qt', 40, 'cooking', 'Gateway Apartments', 'Very good', 'The only appliance I actually used all year.'],
+    ['Storage bins, set of 4', 20, 'boxes', 'Cardinal Gardens', 'Good', 'Stackable, fit under a dorm bed.'],
+    ['Yoga mat + resistance bands', 18, 'yoga', 'Lyon Center', 'Clean', 'For Lyon Center classes or working out in your room.'],
+    ['Electric kettle, 1.7L', 15, 'kettle', 'Birnkrant', 'Works', 'Boils fast, auto shutoff. Great for late-night ramen.'],
+    ['Tennis racket + 3 balls', 32, 'tennis', 'Marks Tennis Stadium', 'Good', 'Strings still tight. Courts are free for students.'],
+    ['Blender for smoothies', 25, 'blender', 'Parkside', 'Very good', 'Two travel cups included, easy to rinse.'],
+    ['Suitcase, large hardshell', 45, 'suitcase', 'The Lorenzo', 'Good', 'One scuffed corner, all four wheels roll straight. Checked-bag size.']
+  ]
+};
+
+const SEED = (function () {
+  const out = []; let n = 0;
+  Object.keys(RAW).forEach(function (cat) {
+    RAW[cat].forEach(function (r, i) {
+      const name = NAMES[n % NAMES.length];
+      const parts = name.toLowerCase().normalize('NFD').replace(/[^a-z ]/g, '').split(' ');
+      out.push({
+        id: cat + '-' + (i + 1), title: r[0], category: cat, price: r[1], free: r[1] === 0,
+        kw: r[2], location: r[3], condition: r[4], description: r[5],
+        seller: name, email: parts[0].charAt(0) + parts[1].slice(0, 6) + '@usc.edu',
+        days: (n * 3) % 14, views: 40 + ((n * 47) % 460), seed: n + 11
+      });
+      n++;
+    });
+  });
+  return out;
+})();
+
+const CATKW = {"housing":"apartment","furniture":"furniture","electronics":"electronics","textbooks":"books","bikes":"bicycle","tickets":"stadium","services":"campus","free":"giveaway","other":"household"};
+
+const HOODS = ['North University Park', 'USC Village', 'Adams-Normandie', 'Downtown / South Park', 'Exposition Park', 'HSC / Eastlake'];
+
+const HOUSE = {
+  'housing-1': { rent: 1450, beds: 1, baths: 1, hood: 'North University Park', commute: 8, pets: false, furnished: true, lease: 5, moveIn: 'Aug 15', type: 'Apartment', amenities: ['Gym', 'Utilities included', 'Pool'], gender: 'Any', food: 'Any' },
+  'housing-2': { rent: 1100, beds: 1, baths: 1, hood: 'HSC / Eastlake', commute: 18, pets: true, furnished: false, lease: 12, moveIn: 'Sep 1', type: 'House share', amenities: ['Laundry in unit', 'Street parking'], gender: 'Female', food: 'Vegetarian-friendly' },
+  'housing-3': { rent: 1725, beds: 1, baths: 1, hood: 'Downtown / South Park', commute: 16, pets: true, furnished: true, lease: 6, moveIn: 'Jan 5', type: 'Studio', amenities: ['Pool', 'Gym', 'Shuttle'], gender: 'Any', food: 'Any' },
+  'housing-4': { rent: 950, beds: 2, baths: 1, hood: 'North University Park', commute: 10, pets: false, furnished: false, lease: 12, moveIn: 'Aug 20', type: 'Apartment', amenities: ['Backyard', 'Utilities split'], gender: 'Any', food: 'Any' },
+  'housing-5': { rent: 1290, beds: 2, baths: 2, hood: 'USC Village', commute: 5, pets: false, furnished: true, lease: 12, moveIn: 'Aug 1', type: 'Apartment', amenities: ['Doorman', 'Washer/dryer', 'Study lounge'], gender: 'Male', food: 'Any' },
+  'housing-6': { rent: 780, beds: 1, baths: 1, hood: 'USC Village', commute: 6, pets: false, furnished: true, lease: 4, moveIn: 'May 15', type: 'USC housing', amenities: ['On-campus billing', 'Furnished'], gender: 'Female', food: 'Vegetarian-friendly' },
+  'housing-7': { rent: 1025, beds: 1, baths: 1, hood: 'Adams-Normandie', commute: 14, pets: true, furnished: false, lease: 12, moveIn: 'Sep 1', type: 'House share', amenities: ['Backyard', 'Grad students', 'DPS route'], gender: 'Any', food: 'Vegan-friendly' },
+  'housing-8': { rent: 1180, beds: 1, baths: 1, hood: 'USC Village', commute: 4, pets: false, furnished: true, lease: 9, moveIn: 'Aug 22', type: 'USC housing', amenities: ['Meal plan option', 'Closest to Viterbi'], gender: 'Any', food: 'Any' },
+  'housing-9': { rent: 2400, beds: 2, baths: 2, hood: 'USC Village', commute: 7, pets: true, furnished: false, lease: 12, moveIn: 'Aug 10', type: 'Apartment', amenities: ['Remodeled kitchen', 'Gated parking'], gender: 'Any', food: 'Halal-friendly' },
+  'housing-10': { rent: 1150, beds: 1, baths: 1, hood: 'Exposition Park', commute: 12, pets: true, furnished: true, lease: 12, moveIn: 'Aug 25', type: 'Loft', amenities: ['High ceilings', 'Near Expo line'], gender: 'Any', food: 'Any' }
+};
+
+const ROOMMATES = [
+  { id: 'r1', name: 'Alex Chen', email: 'achen@usc.edu', year: 'Junior · Viterbi', budget: [1100, 1500], hood: 'North University Park', clean: 4, noise: 2, sleep: 'early', smoking: false, pets: false, social: 3, lease: 12, moveIn: 'Aug 15', bio: 'CS junior, quiet weeknights, cook most meals. Looking for someone tidy and low-drama.' },
+  { id: 'r2', name: 'Priya Nair', email: 'pnair@usc.edu', year: 'Grad · Marshall', budget: [1300, 1800], hood: 'Downtown / South Park', clean: 5, noise: 1, sleep: 'early', smoking: false, pets: false, social: 2, lease: 12, moveIn: 'Aug 1', bio: 'MBA student, gym at 6am, in bed by 11. Very clean, keep to myself on weeknights.' },
+  { id: 'r3', name: 'Jordan Ellis', email: 'jellis@usc.edu', year: 'Senior · Annenberg', budget: [900, 1300], hood: 'North University Park', clean: 3, noise: 4, sleep: 'late', smoking: false, pets: true, social: 5, lease: 12, moveIn: 'Aug 20', bio: 'Film senior, edits late, hosts small dinners. Have a very calm cat named Trojan.' },
+  { id: 'r4', name: 'Sofia Ramos', email: 'sramos@usc.edu', year: 'Sophomore · Dornsife', budget: [800, 1150], hood: 'USC Village', clean: 4, noise: 2, sleep: 'early', smoking: false, pets: false, social: 3, lease: 9, moveIn: 'Aug 22', bio: 'Pre-med, library person, quiet during finals. Happy to split groceries.' },
+  { id: 'r5', name: 'Marcus Webb', email: 'mwebb@usc.edu', year: 'Junior · Thornton', budget: [1000, 1400], hood: 'Adams-Normandie', clean: 3, noise: 4, sleep: 'late', smoking: false, pets: false, social: 4, lease: 12, moveIn: 'Sep 1', bio: 'Music major — I practice with headphones after 9pm, promise. Social on weekends.' },
+  { id: 'r6', name: 'Hana Ito', email: 'hito@usc.edu', year: 'Grad · Keck', budget: [1200, 1600], hood: 'HSC / Eastlake', clean: 5, noise: 1, sleep: 'early', smoking: false, pets: false, social: 2, lease: 12, moveIn: 'Jul 15', bio: 'Med student on rotations, unpredictable hours but extremely quiet and clean.' },
+  { id: 'r7', name: 'Danny Okafor', email: 'dokafor@usc.edu', year: 'Senior · Viterbi', budget: [950, 1250], hood: 'North University Park', clean: 3, noise: 3, sleep: 'late', smoking: false, pets: true, social: 4, lease: 12, moveIn: 'Aug 15', bio: 'Robotics senior, lab until midnight. Dog-friendly, would love a place with a yard.' },
+  { id: 'r8', name: 'Emily Zhao', email: 'ezhao@usc.edu', year: 'Junior · Marshall', budget: [1300, 1700], hood: 'USC Village', clean: 5, noise: 2, sleep: 'early', smoking: false, pets: false, social: 3, lease: 12, moveIn: 'Aug 10', bio: 'Accounting junior. Deep-clean every Sunday, split chores on a schedule.' },
+  { id: 'r9', name: 'Tomás Rivera', email: 'trivera@usc.edu', year: 'Grad · Price', budget: [900, 1200], hood: 'Exposition Park', clean: 4, noise: 2, sleep: 'early', smoking: false, pets: false, social: 3, lease: 12, moveIn: 'Aug 25', bio: 'Policy grad, bike commuter, cook a lot. Looking for a calm apartment near Expo.' },
+  { id: 'r10', name: 'Grace Kim', email: 'gkim@usc.edu', year: 'Sophomore · Roski', budget: [1000, 1400], hood: 'North University Park', clean: 4, noise: 3, sleep: 'late', smoking: false, pets: true, social: 4, lease: 9, moveIn: 'Aug 18', bio: 'Design student, studio nights, plants everywhere. Cat person.' },
+  { id: 'r11', name: 'Ryan Patel', email: 'rpatel@usc.edu', year: 'Senior · Dornsife', budget: [1400, 1900], hood: 'Downtown / South Park', clean: 3, noise: 4, sleep: 'late', smoking: true, pets: false, social: 5, lease: 12, moveIn: 'Aug 1', bio: 'Econ senior, smoke on the balcony only. Very social, always have people over.' },
+  { id: 'r12', name: 'Lauren Diaz', email: 'ldiaz@usc.edu', year: 'Grad · Rossier', budget: [1100, 1450], hood: 'USC Village', clean: 5, noise: 1, sleep: 'early', smoking: false, pets: false, social: 2, lease: 12, moveIn: 'Aug 12', bio: 'Teaching grad, up at 6, quiet home life. Prefer a roommate with a similar rhythm.' }
+];
+
+const BLANK_PROFILE = {
+  budgetMin: 900, budgetMax: 1500, hood: 'North University Park', commuteMax: 15,
+  clean: 4, noise: 2, sleep: 'early', smoking: false, pets: false, social: 3,
+  lease: 12, moveIn: 'Aug 15', beds: 1, furnished: true
+};
+
+const REASONS = ['Scam or fake listing', 'Prohibited item', 'Harassment or abuse', 'Not a USC student', 'Wrong category'];
+const REPLIES = [
+  'Hey! Yes, it\'s still available.',
+  'I can meet at USC Village tomorrow around 2 — does that work?',
+  'Sure, I can do that price if you can pick up this week.',
+  'Just so you know, I have one other person asking, but you messaged first.'
+];
+const KEY = 'trojan-market-v1';
+
+class Component extends DCLogic {
+  state = {
+    route: 'home', activeId: null, prevRoute: 'home',
+    user: null, listings: SEED.slice(), favorites: [], threads: [], reports: [],
+    q: '', cat: 'all', freeOnly: false, sort: 'new',
+    authOpen: false, authStep: 'email', authEmail: '', authCode: '', authError: '', authBusy: false,
+    demoCode: '', posting: false,
+    idStatus: null, verifyNext: null,
+    vf: { phase: 'idle', message: '', walletUri: '', qrSrc: '', qrFlow: 'mdoc', scenario: 'success', nameDraft: '' },
+    reportOpen: false, reportReason: REASONS[0],
+    activeThreadId: null, draft: '', typing: false,
+    form: this.blankForm(), formError: '', editingId: null, badPhoto: {},
+    hf: { rentMin: 0, rentMax: 2500, distance: 30, beds: 'any', baths: 'any', availability: 'any', furnishing: 'any', amenities: [], gender: 'any', food: 'any', lease: 'any' },
+    profile: null, pf: Object.assign({}, BLANK_PROFILE), behavior: { cats: {}, hoods: {}, prices: [], skips: [] },
+    toast: ''
+  };
+
+  blankForm() {
+    return { title: '', category: 'furniture', price: '', free: false, location: 'USC area', condition: 'Good', description: '', photo: '' };
+  }
+
+  componentDidMount() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        const stored = (d.listings || []).filter(l => String(l.id).charAt(0) === 'u');
+        const edits = {};
+        (d.listings || []).forEach(l => { if (String(l.id).charAt(0) !== 'u') edits[l.id] = l; });
+        this.setState({
+          user: d.user || null,
+          listings: stored.concat(SEED.map(l => edits[l.id] ? Object.assign({}, l, { sold: edits[l.id].sold }) : l)),
+          favorites: d.favorites || [],
+          threads: d.threads || [],
+          profile: d.profile || null,
+          pf: Object.assign({}, BLANK_PROFILE, d.profile || {}),
+          behavior: d.behavior || { cats: {}, hoods: {}, prices: [], skips: [] }
+        });
+      }
+    } catch (e) {}
+    setTimeout(() => this.preflight(), 300);
+    this._hideHandler = () => { if (document.visibilityState === 'hidden') this.flushEvents(); };
+    document.addEventListener('visibilitychange', this._hideHandler);
+    this.connectServer();
+    setTimeout(() => this.logVisibleSurface(), 600);
+    try {
+      this.chan = new BroadcastChannel('trojan-market');
+      this.chan.onmessage = (e) => {
+        if (e.data && e.data.type === 'sync') {
+          this.setState({ listings: e.data.listings, threads: e.data.threads, favorites: e.data.favorites });
+        }
+      };
+    } catch (e) {}
+  }
+
+  componentWillUnmount() {
+    this.flushEvents();
+    if (this._hideHandler) document.removeEventListener('visibilitychange', this._hideHandler);
+    if (this.es) this.es.close();
+    if (this.chan) this.chan.close();
+    if (this.replyTimer) clearTimeout(this.replyTimer);
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.stopPolling();
+  }
+
+  componentDidUpdate() {
+    if (this._focusResult && this._resultEl) { this._focusResult = false; try { this._resultEl.focus(); } catch (e) {} }
+    if (this.scrollEl) this.scrollEl.scrollTop = this.scrollEl.scrollHeight;
+    this.syncImages();
+    this.logVisibleSurface();
+  }
+
+  /** Impressions for the surface currently on screen. Mandatory: the ranking
+      dataset needs the listings that were shown and ignored, not just clicks. */
+  logVisibleSurface() {
+    const s = this.state;
+    if (s.route === 'home') {
+      this.trackImpressions('foryou', this.recommendedListings(5).map((x) => x.listing), { source: 'heuristic' });
+      this.trackImpressions('housing', this.housingResults().slice(0, 12).map((d) => ({ id: d.id })), {
+        source: 'heuristic',
+        filters: { rent_max: s.hf.rentMax, distance: s.hf.distance, beds: s.hf.beds }
+      });
+    } else if (s.route === 'foryou') {
+      this.trackImpressions('foryou', this.recommendedListings(5).map((x) => x.listing), { source: 'heuristic' });
+    } else if (s.route === 'browse') {
+      this.trackImpressions('search', this.filtered().slice(0, 24), { source: 'heuristic', query: s.q || null });
+    }
+  }
+
+  syncImages() {
+    const nodes = document.querySelectorAll('img[data-src]');
+    for (let i = 0; i < nodes.length; i++) {
+      const el = nodes[i];
+      const want = el.getAttribute('data-src');
+      if (want && el.getAttribute('src') !== want) el.setAttribute('src', want);
+    }
+  }
+
+  /* ---------------- matching + recommendation engine ---------------- */
+
+  overlap(a, b) {
+    const lo = Math.max(a[0], b[0]), hi = Math.min(a[1], b[1]);
+    if (hi < lo) return 0;
+    const span = Math.min(a[1] - a[0], b[1] - b[0]) || 1;
+    return Math.min(1, (hi - lo) / span);
+  }
+
+  roommateScore(r) {
+    const p = this.state.profile || BLANK_PROFILE;
+    const near = (a, b) => 1 - Math.min(1, Math.abs(a - b) / 4);
+    const parts = [
+      { w: 25, v: this.overlap([p.budgetMin, p.budgetMax], r.budget), yes: 'similar budgets', no: 'different budget ranges' },
+      { w: 15, v: p.hood === r.hood ? 1 : 0.25, yes: 'the same preferred neighborhood', no: 'different preferred areas' },
+      { w: 15, v: near(p.clean, r.clean), yes: 'matching cleanliness standards', no: 'different cleanliness habits' },
+      { w: 10, v: p.sleep === r.sleep ? 1 : 0.2, yes: 'the same sleep schedule', no: 'opposite sleep schedules' },
+      { w: 10, v: near(p.noise, r.noise), yes: 'similar noise tolerance', no: 'different noise levels' },
+      { w: 8, v: p.smoking === r.smoking ? 1 : 0, yes: 'aligned smoking preferences', no: 'a smoking mismatch' },
+      { w: 7, v: p.pets === r.pets ? 1 : 0.3, yes: 'the same take on pets', no: 'a pet mismatch' },
+      { w: 5, v: near(p.social, r.social), yes: 'a similar social/private balance', no: 'different social styles' },
+      { w: 5, v: (p.lease === r.lease ? 0.6 : 0.2) + (p.moveIn === r.moveIn ? 0.4 : 0), yes: 'the same lease length and move-in window', no: 'different move-in timing' }
+    ];
+    let score = 0;
+    parts.forEach(x => { score += x.w * x.v; });
+    const strong = parts.filter(x => x.v >= 0.75).sort((a, b) => b.w - a.w).map(x => x.yes);
+    const weak = parts.filter(x => x.v < 0.4).sort((a, b) => b.w - a.w).map(x => x.no);
+    return { score: Math.min(98, Math.round(score)), strong: strong, weak: weak };
+  }
+
+  houseScore(l) {
+    const h = HOUSE[l.id];
+    if (!h) return null;
+    const p = this.state.profile || BLANK_PROFILE;
+    const rows = [];
+    const add = (w, v, ok, txt) => { rows.push({ w: w, v: v, ok: ok, text: txt }); };
+    const over = h.rent - p.budgetMax;
+    add(30, over <= 0 ? 1 : Math.max(0, 1 - over / 600), over <= 0, over <= 0 ? 'Within budget ($' + h.rent.toLocaleString() + '/mo)' : '$' + over.toLocaleString() + ' over your budget');
+    add(15, h.commute <= p.commuteMax ? 1 : Math.max(0, 1 - (h.commute - p.commuteMax) / 20), h.commute <= p.commuteMax, h.commute + '-minute commute to campus');
+    add(15, h.hood === p.hood ? 1 : 0.35, h.hood === p.hood, h.hood === p.hood ? 'Preferred neighborhood' : h.hood + ' (not your first pick)');
+    const petsOk = !p.pets || h.pets;
+    add(10, petsOk ? 1 : 0, petsOk, h.pets ? 'Pet-friendly' : (petsOk ? 'No pets — matches your preference' : 'No pets allowed'));
+    add(10, !p.furnished || h.furnished ? 1 : 0.2, !p.furnished || h.furnished, h.furnished ? 'Furnished' : 'Unfurnished');
+    add(10, Math.abs(h.lease - p.lease) <= 2 ? 1 : 0.4, Math.abs(h.lease - p.lease) <= 2, h.lease + '-month lease · available ' + h.moveIn);
+    add(10, h.beds >= p.beds ? 1 : 0.5, h.beds >= p.beds, h.beds + ' bed · ' + h.baths + ' bath · ' + h.type);
+    let score = 0;
+    rows.forEach(r => { score += r.w * r.v; });
+    return { score: Math.round(score), rows: rows, amenities: h.amenities, hood: h.hood };
+  }
+
+  /** Local affinity profile (offline mode) + behavioural event (server mode). */
+  trackInteraction(kind, l, surface, rank) {
+    const b = Object.assign({ cats: {}, hoods: {}, prices: [], skips: [] }, this.state.behavior);
+    if (kind === 'skip') { b.skips = b.skips.concat([l.id]); }
+    else {
+      const weight = kind === 'save' ? 3 : 1;
+      b.cats = Object.assign({}, b.cats, { [l.category]: (b.cats[l.category] || 0) + weight });
+      const h = HOUSE[l.id];
+      if (h) b.hoods = Object.assign({}, b.hoods, { [h.hood]: (b.hoods[h.hood] || 0) + weight });
+      b.prices = b.prices.concat([Number(l.price) || 0]).slice(-20);
+    }
+    this.persist({ behavior: b });
+
+    const map = { view: 'detail_view', save: 'save', skip: 'skip' };
+    this.track(map[kind] || kind, {
+      listing_id: l.id,
+      surface: surface || 'home',
+      rank_position: rank === undefined ? null : rank
+    });
+  }
+
+  affinity(l) {
+    const b = this.state.behavior || { cats: {}, hoods: {}, prices: [] };
+    const total = Object.keys(b.cats).reduce((n, k) => n + b.cats[k], 0) || 1;
+    let a = 4 * ((b.cats[l.category] || 0) / total);
+    const h = HOUSE[l.id];
+    if (h && b.hoods[h.hood]) a += 2;
+    if (b.prices.length) {
+      const avg = b.prices.reduce((x, y) => x + y, 0) / b.prices.length;
+      const price = Number(l.price) || 0;
+      if (avg > 0) a += 2 * Math.max(0, 1 - Math.abs(price - avg) / (avg + 200));
+    }
+    return Math.min(8, a);
+  }
+
+  /* Two layers, cached separately by design.
+
+     The expensive work is filtering 90 listings; the filter's only inputs are
+     the listings array and the filter state, so that result can be memoized
+     safely. Decoration is cheap (~10 survivors) but ALSO reads state.profile
+     (House Match score) and state.badPhoto (photo fallback stage), so it runs
+     fresh on every render. Caching the decorated output — as this did before —
+     made every state slice it touches a hidden cache input. */
+  housingResults() {
+    const h = this.state.hf;
+    const filterKey = JSON.stringify(h);
+    if (this._hrListings !== this.state.listings || this._hrFilters !== filterKey) {
+      this._hrPassed = this.filterHousing(h);
+      this._hrListings = this.state.listings;
+      this._hrFilters = filterKey;
+    }
+    return this._hrPassed
+      .map(l => this.decorateHousing(l))
+      .sort((a, b) => parseInt(b.matchLabel) - parseInt(a.matchLabel));
+  }
+
+  /** Pure over (listings, filter state) — safe to memoize. */
+  filterHousing(h) {
+    return this.state.listings.filter(l => {
+      const d = HOUSE[l.id];
+      if (!d) return false;
+      if (d.rent < h.rentMin || d.rent > h.rentMax) return false;
+      if (d.commute > h.distance) return false;
+      if (h.beds !== 'any' && d.beds < Number(h.beds)) return false;
+      if (h.baths !== 'any' && d.baths < Number(h.baths)) return false;
+      if (h.furnishing !== 'any' && (h.furnishing === 'furnished') !== !!d.furnished) return false;
+      if (h.lease !== 'any' && !(h.lease === 'short' ? d.lease <= 6 : d.lease >= 9)) return false;
+      if (h.gender !== 'any' && d.gender !== 'Any' && d.gender !== h.gender) return false;
+      if (h.food !== 'any' && d.food !== 'Any' && d.food.toLowerCase().indexOf(h.food.toLowerCase()) < 0) return false;
+      if (h.availability !== 'any') {
+        const month = String(d.moveIn).split(' ')[0];
+        const fall = ['Jul', 'Aug', 'Sep'].indexOf(month) >= 0;
+        if (h.availability === 'fall' && !fall) return false;
+        if (h.availability === 'spring' && fall) return false;
+      }
+      if (h.amenities.length && !h.amenities.every(a => d.amenities.some(x => x.toLowerCase().indexOf(a.toLowerCase()) >= 0) || (a === 'Pet-friendly' && d.pets))) return false;
+      return true;
+    });
+  }
+
+  /** Reads live state (profile, badPhoto) — never cached. */
+  decorateHousing(l) {
+    const d = this.decorate(l);
+    const hs = this.houseScore(l);
+    const dd = HOUSE[l.id];
+    d.specLabel = dd.beds + 'BD · ' + dd.baths + 'BA · ' + dd.commute + ' min · ' + (dd.furnished ? 'Furnished' : 'Unfurnished');
+    d.matchLabel = hs ? hs.score + '% MATCH' : '';
+    d.matchStyle = 'position: absolute; top: 10px; left: 10px; z-index: 2; background: ' + (hs && hs.score >= 85 ? '#990000' : '#241A12') + '; color: #FFF8E7; font-family: \'JetBrains Mono\', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; padding: 6px 10px; border-radius: 999px;';
+    return d;
+  }
+
+  setHf(k, v) { this.setState({ hf: Object.assign({}, this.state.hf, { [k]: v }) }); }
+
+  chip(active) {
+    return 'border: 1px solid ' + (active ? '#990000' : '#E6DCC7') + '; background: ' + (active ? '#990000' : '#FFFFFF') + '; color: ' + (active ? '#FFF8E7' : '#55463A') + '; border-radius: 999px; padding: 8px 15px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;';
+  }
+
+  seg(k, opts) {
+    return opts.map(o => ({ label: o[1], style: this.chip(this.state.hf[k] === o[0]), pick: () => this.setHf(k, o[0]) }));
+  }
+
+  recommendedListings(n) {
+    const skips = (this.state.behavior && this.state.behavior.skips) || [];
+    return this.state.listings
+      .filter(l => skips.indexOf(l.id) < 0 && !l.sold)
+      .map(l => {
+        const hs = this.houseScore(l);
+        const base = hs ? hs.score : 42;
+        const raw = base + this.affinity(l);
+        // soft ceiling: distinct listings keep distinct percentages
+        const score = raw <= 88 ? raw : 88 + (raw - 88) * 0.35;
+        return { listing: l, score: Math.max(35, Math.round(score)), house: hs };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, n || 5);
+  }
+
+  /* ---------------- event instrumentation ----------------
+
+     Every listing SHOWN is logged as an impression with its rank, surface and
+     recommendation provenance — not only the ones clicked. Without the
+     negatives there is no ranking dataset. Events are batched and flushed on a
+     timer so instrumentation never blocks a render.
+  */
+
+  surfaceOf() {
+    const r = this.state.route;
+    return r === 'home' ? 'home' : r === 'foryou' ? 'foryou' : r === 'browse' ? 'search'
+      : r === 'roommates' ? 'roommates' : r === 'detail' ? 'detail' : r === 'messages' ? 'messages' : 'home';
+  }
+
+  sessionId() {
+    if (this._sid) return this._sid;
+    try {
+      let s = sessionStorage.getItem('tm-session');
+      if (!s) { s = 's_' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36); sessionStorage.setItem('tm-session', s); }
+      this._sid = s;
+    } catch (e) { this._sid = 's_' + Date.now().toString(36); }
+    return this._sid;
+  }
+
+  track(eventType, fields) {
+    if (!this._queue) this._queue = [];
+    this._queue.push(Object.assign({
+      event_type: eventType,
+      session_id: this.sessionId(),
+      timestamp: Date.now(),
+      device_type: typeof window !== 'undefined' && window.innerWidth < 700 ? 'mobile' : 'desktop'
+    }, fields || {}));
+    if (this._queue.length >= 40) this.flushEvents();
+    else if (!this._flushTimer) {
+      this._flushTimer = setTimeout(() => this.flushEvents(), 4000);
+    }
+  }
+
+  flushEvents() {
+    if (this._flushTimer) { clearTimeout(this._flushTimer); this._flushTimer = null; }
+    const batch = (this._queue || []).splice(0, 100);
+    if (!batch.length) return;
+    if (!this.api) return;                       // offline mode: nothing to ship
+    try {
+      const body = JSON.stringify({ events: batch });
+      if (navigator.sendBeacon && !this.token) {
+        navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' }));
+      } else {
+        fetch('/api/events', { method: 'POST', headers: this.authHeaders(), body: body, keepalive: true }).catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  /** Log one impression per listing rendered on a surface. */
+  trackImpressions(surface, listings, meta) {
+    if (!listings || !listings.length) return;
+    const key = this.sessionId() + '|' + listings.map((l) => l.id).join(',');
+    /* Keyed PER SURFACE: the home route logs two surfaces per render, and a
+       single shared key would be overwritten by each call, defeating the guard
+       and re-emitting impressions on every setState. */
+    if (!this._impressionKeys) this._impressionKeys = {};
+    if (this._impressionKeys[surface] === key) return;
+    this._impressionKeys[surface] = key;
+    listings.forEach((l, i) => {
+      this.track('impression', {
+        listing_id: l.id,
+        surface: surface,
+        rank_position: i,
+        viewport_visible: i < 8,
+        recommendation_source: (meta && meta.source) || 'heuristic',
+        model_version: (meta && meta.model_version) || null,
+        query_text: (meta && meta.query) || null,
+        filters_active: (meta && meta.filters) || null
+      });
+    });
+  }
+
+  /* ---- server mode: used when the bundled Node API is running ---- */
+
+  connectServer() {
+    if (typeof fetch !== 'function' || typeof location === 'undefined' || location.protocol === 'file:') return;
+    this.token = null;
+    try { this.token = localStorage.getItem('trojan-market-token'); } catch (e) {}
+    fetch('/api/health').then(r => r.ok ? r.json() : null).then(h => {
+      if (!h || !h.ok) return;
+      this.api = true;
+      return fetch('/api/state', { headers: this.authHeaders() }).then(r => r.json()).then(d => {
+        if (!d.user) { this.token = null; try { localStorage.removeItem('trojan-market-token'); } catch (e) {} }
+        this.setState({
+          listings: (d.listings && d.listings.length) ? d.listings : this.state.listings,
+          favorites: d.favorites || [], threads: d.threads || [], user: d.user || null,
+          profile: d.profile || this.state.profile,
+          pf: Object.assign({}, BLANK_PROFILE, d.profile || this.state.profile || {}),
+          behavior: d.behavior || this.state.behavior
+        });
+        this.openStream();
+        if (d.user) this.loadIdentity();
+      });
+    }).catch(() => {});
+  }
+
+  /* ---- digital ID verification ---- */
+
+  loadIdentity() {
+    if (!this.api || !this.token) return Promise.resolve(null);
+    return fetch('/api/identity/status', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(st => {
+      if (!st) return null;
+      const vf = Object.assign({}, this.state.vf, { nameDraft: this.state.vf.nameDraft || st.displayName || '' });
+      this.setState({ idStatus: st, vf: vf });
+      return st;
+    }).catch(() => null);
+  }
+
+  isMeVerified() { return !!(this.state.idStatus && this.state.idStatus.verified); }
+
+  setVf(patch) { this.setState({ vf: Object.assign({}, this.state.vf, patch) }); }
+
+  dcSupported() {
+    return typeof window !== 'undefined' && typeof window.DigitalCredential !== 'undefined' &&
+      !!(navigator.credentials && navigator.credentials.get);
+  }
+
+  dcFlow() {
+    return /iPhone|iPad|Macintosh/.test(navigator.userAgent || '') && /Safari/.test(navigator.userAgent || '') && !/Chrome|CriOS/.test(navigator.userAgent || '') ? 'mdoc' : 'openid4vp';
+  }
+
+  stopPolling() {
+    if (this._pollTimer) { clearTimeout(this._pollTimer); this._pollTimer = null; }
+    this._pollSession = null;
+  }
+
+  showResult(r) {
+    this.stopPolling();
+    const d = (r && r.data) || {};
+    if (r && r.ok && d.status === 'verified') {
+      this._focusResult = true;
+      this.setVf({ phase: 'success', message: '' });
+      this.loadIdentity().then(() => this.refreshState());
+      return;
+    }
+    if (r && r.ok && d.status === 'cancelled') { this._focusResult = true; this.setVf({ phase: 'cancelled', message: d.message || 'You cancelled in the wallet.' }); return; }
+    this._focusResult = true;
+    this.setVf({ phase: 'failed', message: d.message || d.error || 'Something went wrong. Try again.' });
+  }
+
+  refreshState() {
+    return fetch('/api/state', { headers: this.authHeaders() }).then(r => r.json())
+      .then(d => this.setState({ listings: d.listings || this.state.listings, threads: d.threads || this.state.threads, user: d.user || this.state.user }))
+      .catch(() => {});
+  }
+
+  startDc() {
+    const st = this.state.idStatus;
+    if (!st) return;
+    const demo = st.demo;
+    if (!demo && !this.dcSupported()) { this.setVf({ phase: 'failed', message: 'This browser does not support the Digital Credentials API. Use the QR code option instead.' }); return; }
+    this.stopPolling();
+    this.setVf({ phase: 'pending', message: '' });
+    const flow = this.dcFlow();
+    this.post('/api/identity/dc/start', { flow: flow, scenario: this.state.vf.scenario }).then(s => {
+      if (!s.ok) { this.showResult(s); return; }
+      const send = (data) => this.post('/api/identity/dc/verify', { sessionId: s.data.sessionId, data: data }).then(v => this.showResult(v));
+      if (s.data.demo) return send(null);
+      return navigator.credentials.get({
+        mediation: 'required',
+        digital: { requests: [{ protocol: s.data.protocol, data: s.data.data }] }
+      }).then(cred => send(cred && cred.data), err => {
+        const cancelledByUser = err && (err.name === 'AbortError' || err.name === 'NotAllowedError');
+        this._focusResult = true;
+        this.setVf(cancelledByUser
+          ? { phase: 'cancelled', message: 'The wallet request was closed.' }
+          : { phase: 'failed', message: 'The wallet could not share a credential' + (err && err.message ? ': ' + err.message : '.') });
+      });
+    }).catch(() => this.showResult(null));
+  }
+
+  startQr() {
+    const st = this.state.idStatus;
+    if (!st) return;
+    this.stopPolling();
+    this.post('/api/identity/qr/start', { flow: this.state.vf.qrFlow, scenario: this.state.vf.scenario }).then(s => {
+      if (!s.ok) { this.showResult(s); return; }
+      let qrSrc = '';
+      try { qrSrc = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(window.TMQR.toSvg(s.data.walletUri, { ecl: 'M' })); } catch (e) {}
+      this.setVf({ phase: 'qr', walletUri: s.data.walletUri, qrSrc: qrSrc, message: '' });
+      this._pollSession = s.data.sessionId;
+      this.schedulePoll(s.data.pollMs || 2000);
+    }).catch(() => this.showResult(null));
+  }
+
+  schedulePoll(ms) {
+    const id = this._pollSession;
+    this._pollTimer = setTimeout(() => {
+      if (!id || id !== this._pollSession) return;
+      this.post('/api/identity/qr/poll', { sessionId: id }).then(r => {
+        if (id !== this._pollSession) return;
+        if (r.ok && r.data.status === 'pending') { this.schedulePoll(ms); return; }
+        this.showResult(r);
+      }).catch(() => { if (id === this._pollSession) this.schedulePoll(ms * 2); });
+    }, ms);
+  }
+
+  badgeLabel(method) { return method === 'simulated' ? 'ID verified (demo)' : 'Verified with digital ID'; }
+
+  authHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (this.token) h.Authorization = 'Bearer ' + this.token;
+    return h;
+  }
+
+  openStream() {
+    if (this.es || typeof EventSource !== 'function') return;
+    this.es = new EventSource('/api/stream');
+    const refresh = () => fetch('/api/state', { headers: this.authHeaders() }).then(r => r.json())
+      .then(d => this.setState({ listings: d.listings || this.state.listings, threads: d.threads || this.state.threads }))
+      .catch(() => {});
+    ['listing:new', 'listing:update', 'listing:delete', 'state'].forEach(ev => this.es.addEventListener(ev, refresh));
+    this.es.addEventListener('message:new', (e) => {
+      let p = null; try { p = JSON.parse(e.data); } catch (err) { return; }
+      this.setState({ threads: this.state.threads.map(t => t.id === p.threadId ? Object.assign({}, t, { messages: t.messages.concat([p.message]) }) : t) });
+    });
+  }
+
+  post(path, payload, method) {
+    return fetch(path, { method: method || 'POST', headers: this.authHeaders(), body: JSON.stringify(payload || {}) })
+      .then(r => r.json().then(d => ({ ok: r.ok, data: d })));
+  }
+
+  persist(patch) {
+    this.setState(patch, () => {
+      const { user, listings, favorites, threads, profile, behavior } = this.state;
+      try { localStorage.setItem(KEY, JSON.stringify({ user, listings, favorites, threads, profile, behavior })); } catch (e) {}
+      if (this.chan) { try { this.chan.postMessage({ type: 'sync', listings, threads, favorites }); } catch (e) {} }
+      if (this.api && this.token) this.post('/api/state', { favorites, threads, profile: this.state.profile, behavior: this.state.behavior }).catch(() => {});
+    });
+  }
+
+  /** Listing changes go through /api/listings so the server enforces ownership and the ID badge. */
+  saveListing(id, fields) {
+    if (!this.api || !this.token) return Promise.resolve({ ok: false, data: { error: 'Sign in to post.' } });
+    return this.post(id ? '/api/listings/' + id : '/api/listings', fields, id ? 'PATCH' : 'POST').then(r => {
+      if (r.ok && r.data.listing) {
+        const l = r.data.listing;
+        const exists = this.state.listings.some(x => x.id === l.id);
+        this.persist({ listings: exists ? this.state.listings.map(x => x.id === l.id ? l : x) : [l].concat(this.state.listings) });
+      }
+      return r;
+    });
+  }
+
+  removeListing(id) {
+    if (!this.api || !this.token) return;
+    this.post('/api/listings/' + id, {}, 'DELETE').then(r => {
+      if (r.ok) { this.persist({ listings: this.state.listings.filter(x => x.id !== id) }); this.notify('Listing deleted'); }
+      else this.notify(r.data.error || 'Could not delete');
+    }).catch(() => this.notify('Could not delete'));
+  }
+
+  goVerify(next) {
+    this.requireAuth(() => {
+      this.stopPolling();
+      this.go('verify', { verifyNext: next || null, vf: Object.assign({}, this.state.vf, { phase: 'idle', message: '' }) });
+      this.loadIdentity();
+    });
+  }
+
+  notify(msg) {
+    this.setState({ toast: msg });
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+
+  go(route, extra) {
+    this.setState(Object.assign({ prevRoute: this.state.route, route: route }, extra || {}));
+    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+  }
+
+  requireAuth(then) {
+    if (this.state.user) { then(); return; }
+    this.setState({ authOpen: true, authStep: 'email', authError: '', pendingAction: then });
+  }
+
+  cat(id) { return CATS.filter(c => c.id === id)[0] || CATS[CATS.length - 1]; }
+
+  initialsOf(name) {
+    return String(name || '?').split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase()).join('');
+  }
+
+  dateOf(l) {
+    const d = new Date(Date.now() - (l.days || 0) * 86400000);
+    return (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
+  }
+
+  photoStyle(l, h, big) {
+    const tone = this.cat(l.category).tone;
+    return 'position: relative; overflow: hidden; width: 100%; height: ' + h + 'px; display: grid; place-items: center; font-family: \'JetBrains Mono\', monospace; letter-spacing: 0.12em; font-size: ' + (big ? '13px' : '11.5px') + '; color: #8C7E6B; text-align: center; padding: 10px; background-color: ' + tone + '; background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.55) 0 8px, transparent 8px 16px);';
+  }
+
+  keywordUrl(l, stage) {
+    const cw = CATKW[l.category] || 'campus';
+    const word = stage === 2 ? cw : (String(l.kw || '').trim() || cw);
+    return 'https://loremflickr.com/800/800/' + encodeURIComponent(word) + '?lock=' + (l.seed || 1);
+  }
+
+  fallbackUrl(l) {
+    return 'https://picsum.photos/seed/' + encodeURIComponent(String(l.id) + '-' + (l.seed || 1)) + '/800/800';
+  }
+
+  photoUrl(l) {
+    if (l.photo) return l.photo;
+    const stage = (this.state.badPhoto || {})[l.id];
+    if (stage === 2) return this.keywordUrl(l, 2);
+    if (stage === 3) return this.fallbackUrl(l);
+    return this.keywordUrl(l, 1);
+  }
+
+  imgRef = (el) => {
+    if (!el) return;
+    const want = el.getAttribute('data-src');
+    if (want && el.getAttribute('src') !== want) el.setAttribute('src', want);
+    if (this.syncTimer) clearTimeout(this.syncTimer);
+    this.syncTimer = setTimeout(() => this.syncImages(), 30);
+  };
+
+  preflight() {
+    const bad = {}; let pending = 0;
+    const flush = () => {
+      if (this.flushTimer) clearTimeout(this.flushTimer);
+      this.flushTimer = setTimeout(() => {
+        this.setState({ badPhoto: Object.assign({}, this.state.badPhoto, bad) });
+      }, 250);
+    };
+    this.state.listings.forEach(l => {
+      if (l.photo) return;
+      pending++;
+      const im = new Image();
+      im.onerror = () => {
+        bad[l.id] = 2; flush();
+        const im2 = new Image();
+        im2.onerror = () => { bad[l.id] = 3; flush(); };
+        im2.src = this.keywordUrl(l, 2);
+      };
+      im.src = this.keywordUrl(l, 1);
+    });
+  }
+
+  decorate(l) {
+    const c = this.cat(l.category);
+    return {
+      id: l.id,
+      title: l.title,
+      catLabel: c.label.toUpperCase(),
+      priceLabel: l.free || Number(l.price) === 0 ? 'FREE' : '$' + Number(l.price).toLocaleString(),
+      isFree: !!(l.free || Number(l.price) === 0) && !l.sold,
+      isSold: !!l.sold,
+      meta: (l.location || 'USC area') + ' · ' + this.dateOf(l),
+      photoStyle: this.photoStyle(l, 240),
+      photoUrl: this.photoUrl(l),
+      hasPhoto: true,
+      photoLabel: l.title.slice(0, 26).toUpperCase(),
+      thumbStyle: this.photoStyle(l, 78) + ' width: 96px; border-radius: 10px; cursor: pointer; flex-shrink: 0;',
+      thumbLabel: '',
+      statusLabel: l.sold ? 'SOLD' : 'ACTIVE',
+      soldCta: l.sold ? 'Relist' : 'Mark sold',
+      viewsLabel: (l.views || 0) + ' views',
+      open: () => {
+        this.track('click', { listing_id: l.id, surface: this.surfaceOf(), rank_position: null });
+        this.trackInteraction('view', l, 'detail');
+        this.go('detail', { activeId: l.id });
+      },
+      toggleSold: () => this.saveListing(l.id, { sold: !l.sold }),
+      edit: () => this.go('post', { editingId: l.id, formError: '', form: { title: l.title, category: l.category, price: String(l.price || ''), free: !!l.free, location: l.location, condition: l.condition, description: l.description, photo: l.photo || '' } }),
+      remove: () => this.removeListing(l.id),
+      sellerVerified: !!l.seller_verified,
+      badgeLabel: this.badgeLabel(l.seller_verification)
+    };
+  }
+
+  filtered() {
+    const s = this.state;
+    let out = s.listings.filter(l => {
+      if (s.cat !== 'all' && l.category !== s.cat && !(s.cat === 'free' && (l.free || Number(l.price) === 0))) return false;
+      if (s.freeOnly && !(l.free || Number(l.price) === 0)) return false;
+      if (s.q.trim()) {
+        const q = s.q.toLowerCase();
+        if (!(l.title + ' ' + l.description + ' ' + l.location + ' ' + this.cat(l.category).label).toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+    if (s.sort === 'low') out = out.sort((a, b) => (a.free ? 0 : a.price) - (b.free ? 0 : b.price));
+    else if (s.sort === 'high') out = out.sort((a, b) => (b.free ? 0 : b.price) - (a.free ? 0 : a.price));
+    else out = out.sort((a, b) => (a.days || 0) - (b.days || 0));
+    return out;
+  }
+
+  scalePill(active, wide) {
+    return 'border: 1px solid ' + (active ? '#990000' : '#E6DCC7') + '; background: ' + (active ? '#990000' : '#FFFFFF') + '; color: ' + (active ? '#FFF8E7' : '#55463A') + '; border-radius: 999px; padding: ' + (wide ? '11px 20px' : '11px 0') + '; min-width: ' + (wide ? 'auto' : '48px') + '; text-align: center; font-size: 14px; font-weight: 700; cursor: pointer;';
+  }
+
+  setPf(k, v) {
+    this.setState({ pf: Object.assign({}, this.state.pf, { [k]: v }) });
+  }
+
+  pill(active) {
+    return 'border: 0; border-radius: 999px; padding: 9px 18px; font-size: 14.5px; font-weight: ' + (active ? '700' : '500') + '; cursor: pointer; white-space: nowrap; background: ' + (active ? '#241A12' : 'transparent') + '; color: ' + (active ? '#FDF9F0' : '#3C3026') + ';';
+  }
+
+  threadFor(listing) {
+    const existing = this.state.threads.filter(t => t.listingId === listing.id)[0];
+    if (existing) return existing;
+    const t = {
+      id: 't' + Date.now(),
+      listingId: listing.id,
+      name: listing.seller,
+      email: listing.email,
+      messages: [{ from: 'them', text: 'Hi! Thanks for reaching out about "' + listing.title + '".', at: Date.now() - 60000 }]
+    };
+    this.persist({ threads: [t].concat(this.state.threads) });
+    return t;
+  }
+
+  send() {
+    const text = this.state.draft.trim();
+    if (!text || !this.state.activeThreadId) return;
+    const id = this.state.activeThreadId;
+    const threads = this.state.threads.map(t => t.id === id ? Object.assign({}, t, { messages: t.messages.concat([{ from: 'me', text: text, at: Date.now() }]) }) : t);
+    this.persist({ threads: threads, draft: '', typing: !this.api });
+    if (this.api && this.token) { this.post('/api/threads/' + id + '/messages', { text: text }).catch(() => {}); return; }
+    if (this.replyTimer) clearTimeout(this.replyTimer);
+    this.replyTimer = setTimeout(() => {
+      const reply = REPLIES[Math.floor(Math.random() * REPLIES.length)];
+      const next = this.state.threads.map(t => t.id === id ? Object.assign({}, t, { messages: t.messages.concat([{ from: 'them', text: reply, at: Date.now() }]) }) : t);
+      this.persist({ threads: next, typing: false });
+    }, 1600);
+  }
+
+  timeOf(at) {
+    const d = new Date(at);
+    let h = d.getHours(); const m = ('0' + d.getMinutes()).slice(-2);
+    const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+    return h + ':' + m + ' ' + ap;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const results = this.filtered().map(l => this.decorate(l));
+    const activeListing = s.listings.filter(l => l.id === s.activeId)[0];
+    const activeThread = s.threads.filter(t => t.id === s.activeThreadId)[0];
+    const favListings = s.listings.filter(l => s.favorites.indexOf(l.id) >= 0).map(l => this.decorate(l));
+    const mine = s.user ? s.listings.filter(l => l.email === s.user.email).map(l => this.decorate(l)) : [];
+    const isFav = activeListing && s.favorites.indexOf(activeListing.id) >= 0;
+
+    return {
+      q: s.q,
+      onSearch: (e) => {
+        const q = e.target.value;
+        this.setState({ q: q, route: 'browse' });
+        if (this._searchTimer) clearTimeout(this._searchTimer);
+        if (q.trim().length > 2) {
+          this._searchTimer = setTimeout(() => this.track('search', { surface: 'search', query_text: q }), 900);
+        }
+      },
+      signedIn: !!s.user, signedOut: !s.user,
+      initials: s.user ? this.initialsOf(s.user.name) : '',
+      unreadLabel: s.threads.length ? '(' + s.threads.length + ')' : '',
+      goHome: () => this.go('home'),
+      goBrowse: () => this.go('browse'),
+      goBack: () => this.go(s.prevRoute === s.route ? 'browse' : s.prevRoute),
+      goPost: () => this.requireAuth(() => {
+        if (!this.isMeVerified()) { this.notify('Posting needs a verified digital ID'); this.goVerify('post'); return; }
+        this.go('post', { form: this.blankForm(), editingId: null, formError: '' });
+      }),
+      goVerify: () => this.goVerify(),
+      meVerified: !!s.user && this.isMeVerified(),
+      meUnverified: !!s.user && !this.isMeVerified(),
+      meBadgeLabel: this.badgeLabel(s.idStatus && s.idStatus.identity && s.idStatus.identity.method),
+      meBadgeAria: 'Your account: ' + this.badgeLabel(s.idStatus && s.idStatus.identity && s.idStatus.identity.method),
+      goMine: () => this.requireAuth(() => this.go('mine')),
+      goFavorites: () => this.requireAuth(() => this.go('favorites')),
+      goMessages: () => this.requireAuth(() => this.go('messages', { activeThreadId: s.activeThreadId || (s.threads[0] && s.threads[0].id) || null })),
+      viewHousing: () => this.go('browse', { cat: 'housing' }),
+      viewMoveIn: () => this.go('browse', { cat: 'furniture' }),
+      signOut: () => {
+        if (this.api && this.token) this.post('/api/auth/signout', {}).catch(() => {});
+        this.token = null;
+        this.stopPolling();
+        try { localStorage.removeItem('trojan-market-token'); } catch (e) {}
+        this.persist({ user: null, idStatus: null }); this.go('home'); this.notify('Signed out');
+      },
+
+      navCats: [{ id: 'all', label: 'All' }].concat(CATS.map(c => ({ id: c.id, label: c.label }))).map(c => ({
+        label: c.label,
+        style: this.pill(s.cat === c.id),
+        pick: () => this.go('browse', { cat: c.id })
+      })),
+      homeCats: CATS.map(c => ({ label: c.label, icon: c.icon, pick: () => this.go('browse', { cat: c.id }) })),
+
+      isHome: s.route === 'home', isBrowse: s.route === 'browse', isDetail: s.route === 'detail' && !!activeListing,
+      isVerify: s.route === 'verify' && !!s.user,
+      isPost: s.route === 'post', isMine: s.route === 'mine', isFavorites: s.route === 'favorites', isMessages: s.route === 'messages',
+
+      housing: s.listings.filter(l => l.category === 'housing').slice(0, 5).map(l => this.decorate(l)),
+      recent: s.listings.slice().sort((a, b) => (a.days || 0) - (b.days || 0)).slice(0, 10).map(l => this.decorate(l)),
+
+      results: results, noResults: results.length === 0,
+      browseTitle: s.cat === 'all' ? (s.q ? 'Search results' : 'All listings') : this.cat(s.cat).label,
+      resultsLabel: results.length + ' ITEM' + (results.length === 1 ? '' : 'S'),
+      freeBtnStyle: 'border: 1px solid ' + (s.freeOnly ? '#990000' : '#E6DCC7') + '; background: ' + (s.freeOnly ? '#990000' : '#FFFFFF') + '; color: ' + (s.freeOnly ? '#FFF8E7' : '#55463A') + '; border-radius: 999px; padding: 10px 16px; font-family: \'JetBrains Mono\', monospace; font-size: 11.5px; letter-spacing: 0.1em; font-weight: 700; cursor: pointer;',
+      toggleFree: () => this.setState({ freeOnly: !s.freeOnly }),
+      sort: s.sort, onSort: (e) => this.setState({ sort: e.target.value }),
+
+      detail: activeListing ? {
+        title: activeListing.title,
+        catLabel: this.cat(activeListing.category).label.toUpperCase(),
+        priceLabel: activeListing.free || Number(activeListing.price) === 0 ? 'FREE' : '$' + Number(activeListing.price).toLocaleString(),
+        meta: (activeListing.views || 0) + ' VIEWS · ' + (activeListing.sold ? 'SOLD' : 'AVAILABLE'),
+        description: activeListing.description,
+        bigPhotoStyle: this.photoStyle(activeListing, 460, true),
+        photoUrl: this.photoUrl(activeListing),
+        hasPhoto: true,
+        photoLabel: activeListing.title.toUpperCase(),
+        sellerName: activeListing.seller,
+        sellerEmail: activeListing.email,
+        sellerInitials: this.initialsOf(activeListing.seller),
+        sellerVerified: !!activeListing.seller_verified,
+        sellerUnverified: !activeListing.seller_verified,
+        badgeLabel: this.badgeLabel(activeListing.seller_verification),
+        location: activeListing.location,
+        dateLabel: this.dateOf(activeListing),
+        condition: activeListing.condition || '—'
+      } : {},
+      favLabel: isFav ? '♥ Saved' : '♡ Save listing',
+      favBtnStyle: 'border: 1px solid ' + (isFav ? '#990000' : '#E6DCC7') + '; background: ' + (isFav ? '#FDF1D2' : '#FFFFFF') + '; color: ' + (isFav ? '#990000' : '#55463A') + '; border-radius: 999px; padding: 13px 24px; font-size: 14px; font-weight: 700; cursor: pointer;',
+      toggleFav: () => this.requireAuth(() => {
+        const has = s.favorites.indexOf(s.activeId) >= 0;
+        this.persist({ favorites: has ? s.favorites.filter(x => x !== s.activeId) : s.favorites.concat([s.activeId]) });
+        if (!has && activeListing) this.trackInteraction('save', activeListing, 'detail');
+        else if (activeListing) this.track('unsave', { listing_id: activeListing.id, surface: 'detail' });
+        this.notify(has ? 'Removed from saved' : 'Saved to your list');
+      }),
+      messageCta: s.user && activeListing && activeListing.email === s.user.email ? 'This is your listing' : 'Message seller',
+      messageSeller: () => this.requireAuth(() => {
+        if (!activeListing) return;
+        if (s.user && activeListing.email === s.user.email) { this.go('mine'); return; }
+        const t = this.threadFor(activeListing);
+        this.go('messages', { activeThreadId: t.id });
+      }),
+
+      openReport: () => this.requireAuth(() => this.setState({ reportOpen: true })),
+      reportOpen: s.reportOpen,
+      closeReport: () => this.setState({ reportOpen: false }),
+      reportReasons: REASONS.map(r => ({
+        label: r,
+        pick: () => this.setState({ reportReason: r }),
+        style: 'border: 1px solid ' + (s.reportReason === r ? '#990000' : '#E6DCC7') + '; background: ' + (s.reportReason === r ? '#FDF1D2' : '#FFFFFF') + '; border-radius: 10px; padding: 13px 15px; font-size: 14.5px; font-weight: ' + (s.reportReason === r ? '700' : '500') + '; cursor: pointer;'
+      })),
+      submitReport: () => {
+        if (this.api && this.token) this.post('/api/reports', { listingId: s.activeId, reason: s.reportReason }).catch(() => {});
+        this.setState({ reportOpen: false, reports: s.reports.concat([{ id: s.activeId, reason: s.reportReason }]) });
+        this.notify('Report sent to moderators');
+      },
+
+      form: {
+        title: s.form.title, category: s.form.category, price: s.form.price, free: s.form.free,
+        location: s.form.location, condition: s.form.condition, description: s.form.description,
+        previewStyle: 'width: 132px; height: 96px; border-radius: 10px; border: 1px dashed #D9CDB4; display: grid; place-items: center; font-family: \'JetBrains Mono\', monospace; font-size: 10.5px; letter-spacing: 0.08em; color: #8C7E6B;' + (s.form.photo ? ' background-image: url(' + s.form.photo + '); background-size: cover; background-position: center; color: transparent;' : ' background: #F4EEE1;'),
+        previewLabel: s.form.photo ? '' : 'NO PHOTO'
+      },
+      catOptions: CATS.map(c => ({ id: c.id, label: c.label })),
+      onFormTitle: (e) => this.setState({ form: Object.assign({}, s.form, { title: e.target.value }) }),
+      onFormCat: (e) => this.setState({ form: Object.assign({}, s.form, { category: e.target.value }) }),
+      onFormPrice: (e) => this.setState({ form: Object.assign({}, s.form, { price: e.target.value }) }),
+      onFormFree: (e) => this.setState({ form: Object.assign({}, s.form, { free: e.target.checked }) }),
+      onFormLoc: (e) => this.setState({ form: Object.assign({}, s.form, { location: e.target.value }) }),
+      onFormCond: (e) => this.setState({ form: Object.assign({}, s.form, { condition: e.target.value }) }),
+      onFormDesc: (e) => this.setState({ form: Object.assign({}, s.form, { description: e.target.value }) }),
+      onFormPhoto: (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = () => this.setState({ form: Object.assign({}, this.state.form, { photo: r.result }) });
+        r.readAsDataURL(f);
+      },
+      clearPhoto: () => this.setState({ form: Object.assign({}, s.form, { photo: '' }) }),
+      formError: s.formError,
+      postTitleLabel: s.editingId ? 'Edit listing' : 'Post a listing',
+      postCta: s.editingId ? 'Save changes' : 'Publish listing',
+      posting: s.posting,
+      submitListing: () => {
+        const f = s.form;
+        if (!f.title.trim()) { this.setState({ formError: 'Give your listing a title.' }); return; }
+        if (!f.free && !(Number(f.price) > 0)) { this.setState({ formError: 'Enter a price, or check "free".' }); return; }
+        const fields = { title: f.title.trim(), category: f.category, price: f.free ? 0 : Number(f.price), free: f.free, location: f.location || 'USC area', condition: f.condition, description: f.description, photo: f.photo };
+        const editing = s.editingId;
+        this.setState({ posting: true, formError: '' });
+        this.saveListing(editing, fields).then(r => {
+          this.setState({ posting: false });
+          if (r.ok) {
+            this.notify(editing ? 'Listing updated' : 'Listing published');
+            this.go('mine', { form: this.blankForm(), editingId: null });
+          } else if (r.data && r.data.code === 'ID_VERIFICATION_REQUIRED') {
+            this.setState({ formError: r.data.error });
+            this.goVerify('post');
+          } else {
+            this.setState({ formError: (r.data && (r.data.error + (r.data.details ? ' ' + r.data.details.join('; ') : ''))) || 'Could not save the listing.' });
+          }
+        }).catch(() => this.setState({ posting: false, formError: 'Could not reach the server.' }));
+      },
+
+      mine: mine, noMine: mine.length === 0,
+      favorites: favListings, noFavorites: favListings.length === 0,
+
+      threads: s.threads.map(t => {
+        const l = s.listings.filter(x => x.id === t.listingId)[0] || { title: 'Removed listing' };
+        const last = t.messages[t.messages.length - 1] || { text: '', at: Date.now() };
+        return {
+          name: t.name, initials: this.initialsOf(t.name), preview: last.text, time: this.timeOf(last.at),
+          listingTitle: l.title,
+          verified: !!t.peer_verified,
+          rowStyle: 'padding: 14px 16px; border-bottom: 1px solid #F1EAD9; cursor: pointer; background: ' + (t.id === s.activeThreadId ? '#FDF1D2' : 'transparent') + ';',
+          open: () => this.setState({ activeThreadId: t.id })
+        };
+      }),
+      noThreads: s.threads.length === 0,
+      hasThread: !!activeThread, noThread: !activeThread,
+      activeThread: activeThread ? { name: activeThread.name, initials: this.initialsOf(activeThread.name), status: activeThread.email, verified: !!activeThread.peer_verified, badgeLabel: this.badgeLabel(activeThread.peer_verification) } : {},
+      activeMessages: activeThread ? activeThread.messages.map(m => ({
+        text: m.text, time: this.timeOf(m.at),
+        rowStyle: 'display: flex; flex-direction: column; max-width: 74%; align-self: ' + (m.from === 'me' ? 'flex-end' : 'flex-start') + '; align-items: ' + (m.from === 'me' ? 'flex-end' : 'flex-start') + ';',
+        bubbleStyle: 'padding: 11px 15px; border-radius: 14px; font-size: 14.5px; line-height: 1.45; background: ' + (m.from === 'me' ? '#990000' : '#F1EBDF') + '; color: ' + (m.from === 'me' ? '#FFF8E7' : '#241A12') + ';'
+      })) : [],
+      typing: s.typing,
+      draft: s.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }),
+      onDraftKey: (e) => { if (e.key === 'Enter') this.send(); },
+      sendMessage: () => this.send(),
+      scrollRef: (el) => { this.scrollEl = el; },
+      openThreadListing: () => { if (activeThread) this.go('detail', { activeId: activeThread.listingId }); },
+
+      authOpen: s.authOpen,
+      authStepEmail: s.authStep === 'email', authStepCode: s.authStep === 'code',
+      authEmail: s.authEmail, authCode: s.authCode, authError: s.authError, demoCode: s.demoCode,
+      hasDemoCode: !!s.demoCode, authBusy: s.authBusy,
+      autoFocus: (el) => { if (el && el !== this._focusedInput) { this._focusedInput = el; setTimeout(() => { try { el.focus(); } catch (e) {} }, 0); } },
+      openAuth: () => this.setState({ authOpen: true, authStep: 'email', authError: '' }),
+      closeAuth: () => this.setState({ authOpen: false, authError: '' }),
+      stop: (e) => e.stopPropagation(),
+      onAuthEmail: (e) => this.setState({ authEmail: e.target.value }),
+      onAuthCode: (e) => this.setState({ authCode: e.target.value }),
+      onAuthKey: (e) => { if (e.key === 'Enter') { if (s.authStep === 'email') this.sendCodeAction(); else this.verifyAction(); } },
+      sendCode: () => this.sendCodeAction(),
+      verifyCode: () => this.verifyAction(),
+
+      imgRef: this.imgRef,
+
+      /* ---- homepage housing filters ---- */
+      hf: { rentMin: String(s.hf.rentMin), rentMax: String(s.hf.rentMax), distance: String(s.hf.distance) },
+      rentLabel: '$' + Number(s.hf.rentMin).toLocaleString() + ' – $' + Number(s.hf.rentMax).toLocaleString() + '/mo',
+      distanceLabel: 'Within ' + s.hf.distance + ' min of campus',
+      onRentMin: (e) => this.setHf('rentMin', Math.min(Number(e.target.value), s.hf.rentMax - 100)),
+      onRentMax: (e) => this.setHf('rentMax', Math.max(Number(e.target.value), s.hf.rentMin + 100)),
+      onDistance: (e) => this.setHf('distance', Number(e.target.value)),
+      bedOpts: this.seg('beds', [['any', 'Any'], ['1', '1+ bed'], ['2', '2+ beds']]),
+      bathOpts: this.seg('baths', [['any', 'Any'], ['1', '1+ bath'], ['2', '2+ baths']]),
+      availOpts: this.seg('availability', [['any', 'Any time'], ['fall', 'Fall (Jul–Sep)'], ['spring', 'Spring (Oct–Jun)']]),
+      furnishOpts: this.seg('furnishing', [['any', 'Any'], ['furnished', 'Furnished'], ['unfurnished', 'Unfurnished']]),
+      leaseOpts: this.seg('lease', [['any', 'Any'], ['short', 'Short (≤6 mo)'], ['long', 'Academic year (9–12 mo)']]),
+      genderOpts: this.seg('gender', [['any', 'Any'], ['Female', 'Female only'], ['Male', 'Male only']]),
+      foodOpts: this.seg('food', [['any', 'Any'], ['Vegetarian', 'Vegetarian-friendly'], ['Vegan', 'Vegan-friendly'], ['Halal', 'Halal-friendly']]),
+      amenityOpts: ['Gym', 'Pool', 'Laundry', 'Parking', 'Pet-friendly', 'Utilities included'].map(a => ({
+        label: a,
+        style: this.chip(s.hf.amenities.indexOf(a) >= 0),
+        pick: () => this.setHf('amenities', s.hf.amenities.indexOf(a) >= 0 ? s.hf.amenities.filter(x => x !== a) : s.hf.amenities.concat([a]))
+      })),
+      housingResults: this.housingResults(),
+      housingCount: this.housingResults().length + ' HOME' + (this.housingResults().length === 1 ? '' : 'S') + ' MATCH',
+      noHousing: this.housingResults().length === 0,
+      trackFilters: () => this.track('filter_applied', { surface: 'housing', filters_active: { rent_max: s.hf.rentMax, distance: s.hf.distance, beds: s.hf.beds, furnishing: s.hf.furnishing, lease: s.hf.lease, amenities: s.hf.amenities.length } }),
+      resetFilters: () => this.setState({ hf: { rentMin: 0, rentMax: 2500, distance: 30, beds: 'any', baths: 'any', availability: 'any', furnishing: 'any', amenities: [], gender: 'any', food: 'any', lease: 'any' } }),
+
+      /* ---- matching, house match, recommendations ---- */
+      isRoommates: s.route === 'roommates', isForYou: s.route === 'foryou', isProfile: s.route === 'profile',
+      goRoommates: () => this.go(s.profile ? 'roommates' : 'profile'),
+      goForYou: () => this.go(s.profile ? 'foryou' : 'profile'),
+      goProfile: () => this.go('profile', { pf: Object.assign({}, BLANK_PROFILE, s.profile || {}) }),
+      hasProfile: !!s.profile, needsProfile: !s.profile,
+
+      matches: ROOMMATES.map(r => {
+        const m = this.roommateScore(r);
+        return {
+          name: r.name, year: r.year, bio: r.bio, initials: this.initialsOf(r.name), email: r.email,
+          score: m.score + '%',
+          summary: 'You are ' + (/^(8|11|18)/.test(String(m.score)) ? 'an ' : 'a ') + m.score + '% match with ' + r.name.split(' ')[0] + ' because you have ' + (m.strong.slice(0, 3).join(', ') || 'a few things in common') + '.',
+          budgetLabel: '$' + r.budget[0].toLocaleString() + '–$' + r.budget[1].toLocaleString(),
+          hood: r.hood, sleepLabel: r.sleep === 'early' ? 'Early riser' : 'Night owl',
+          cleanLabel: 'Cleanliness ' + r.clean + '/5', socialLabel: 'Social ' + r.social + '/5',
+          petsLabel: r.pets ? 'Has / wants pets' : 'No pets', smokeLabel: r.smoking ? 'Smoker' : 'Non-smoker',
+          leaseLabel: r.lease + ' mo · ' + r.moveIn,
+          ringStyle: 'width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; font-family: \'JetBrains Mono\', monospace; font-weight: 700; font-size: 15px; flex-shrink: 0; color: ' + (m.score >= 80 ? '#FFF8E7' : '#241A12') + '; background: ' + (m.score >= 80 ? '#990000' : m.score >= 65 ? '#FFC72C' : '#EFE7D7') + ';',
+          strong: m.strong.slice(0, 4).map(t => ({ text: t })),
+          weak: m.weak.slice(0, 2).map(t => ({ text: t })),
+          message: () => this.requireAuth(() => {
+            const pseudo = { id: 'rm-' + r.id, title: 'Roommate match — ' + r.name, seller: r.name, email: r.email };
+            const t = this.threadFor(pseudo);
+            this.go('messages', { activeThreadId: t.id });
+          })
+        };
+      }).sort((a, b) => parseInt(b.score) - parseInt(a.score)),
+
+      recs: this.recommendedListings(5).map(x => {
+        const d = this.decorate(x.listing);
+        d.matchLabel = x.score + '% MATCH';
+        d.matchStyle = 'position: absolute; top: 10px; left: 10px; z-index: 2; background: ' + (x.score >= 85 ? '#990000' : '#241A12') + '; color: #FFF8E7; font-family: \'JetBrains Mono\', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; padding: 6px 10px; border-radius: 999px;';
+        d.skip = (e) => {
+          e.stopPropagation();
+          this.trackInteraction('skip', x.listing, 'foryou');
+          this.notify('Hidden from recommendations');
+        };
+        return d;
+      }),
+      recRoommates: ROOMMATES.map(r => ({ r: r, m: this.roommateScore(r) })).sort((a, b) => b.m.score - a.m.score).slice(0, 3).map(x => ({
+        name: x.r.name, year: x.r.year, initials: this.initialsOf(x.r.name), score: x.m.score + '%',
+        reason: 'Matches on ' + (x.m.strong.slice(0, 2).join(' and ') || 'budget'),
+        open: () => this.go(s.profile ? 'roommates' : 'profile')
+      })),
+
+      houseMatch: activeListing ? (() => {
+        const h = this.houseScore(activeListing);
+        if (!h) return null;
+        return {
+          score: h.score + '%',
+          headline: 'HOUSE MATCH — ' + h.score + '%',
+          rows: h.rows.map(r => ({ text: (r.ok ? '✓ ' : '✕ ') + r.text, style: 'font-size: 14.5px; color: ' + (r.ok ? '#2F5D3A' : '#8A1414') + ';' })),
+          amenityList: h.amenities.map(a => ({ text: a })),
+          barStyle: 'height: 8px; border-radius: 999px; background: #EFE7D7; overflow: hidden;',
+          fillStyle: 'height: 100%; width: ' + h.score + '%; background: #990000;'
+        };
+      })() : null,
+      hasHouseMatch: !!(activeListing && HOUSE[activeListing.id]),
+
+      /* preference form */
+      pf: {
+        budgetMin: String(s.pf.budgetMin), budgetMax: String(s.pf.budgetMax), hood: s.pf.hood,
+        commuteMax: String(s.pf.commuteMax), sleep: s.pf.sleep, smoking: s.pf.smoking, pets: s.pf.pets,
+        lease: String(s.pf.lease), moveIn: s.pf.moveIn, beds: String(s.pf.beds), furnished: s.pf.furnished
+      },
+      hoodOptions: HOODS.map(h => ({ id: h, label: h })),
+      cleanScale: [1, 2, 3, 4, 5].map(n => ({ label: String(n), style: this.scalePill(s.pf.clean === n), pick: () => this.setPf('clean', n) })),
+      noiseScale: [1, 2, 3, 4, 5].map(n => ({ label: String(n), style: this.scalePill(s.pf.noise === n), pick: () => this.setPf('noise', n) })),
+      socialScale: [1, 2, 3, 4, 5].map(n => ({ label: String(n), style: this.scalePill(s.pf.social === n), pick: () => this.setPf('social', n) })),
+      sleepEarlyStyle: this.scalePill(s.pf.sleep === 'early', true), sleepLateStyle: this.scalePill(s.pf.sleep === 'late', true),
+      pickEarly: () => this.setPf('sleep', 'early'), pickLate: () => this.setPf('sleep', 'late'),
+      onPfMin: (e) => this.setPf('budgetMin', Number(e.target.value) || 0),
+      onPfMax: (e) => this.setPf('budgetMax', Number(e.target.value) || 0),
+      onPfHood: (e) => this.setPf('hood', e.target.value),
+      onPfCommute: (e) => this.setPf('commuteMax', Number(e.target.value) || 0),
+      onPfLease: (e) => this.setPf('lease', Number(e.target.value) || 12),
+      onPfMoveIn: (e) => this.setPf('moveIn', e.target.value),
+      onPfBeds: (e) => this.setPf('beds', Number(e.target.value) || 1),
+      onPfSmoking: (e) => this.setPf('smoking', e.target.checked),
+      onPfPets: (e) => this.setPf('pets', e.target.checked),
+      onPfFurnished: (e) => this.setPf('furnished', e.target.checked),
+      saveProfile: () => {
+        this.persist({ profile: Object.assign({}, s.pf) });
+        this.notify('Preferences saved — matches updated');
+        this.go('foryou');
+      },
+
+      vf: this.verifyVals(),
+      onNameDraft: (e) => this.setVf({ nameDraft: e.target.value }),
+      saveName: () => {
+        this.post('/api/identity/name', { name: s.vf.nameDraft }).then(r => {
+          if (!r.ok) { this.notify(r.data.error || 'Could not save name'); return; }
+          this.setState({ user: Object.assign({}, s.user, { name: r.data.user.name }) });
+          this.notify('Name saved');
+          this.loadIdentity().then(() => this.refreshState());
+        }).catch(() => this.notify('Could not save name'));
+      },
+      onScenario: (e) => this.setVf({ scenario: e.target.value }),
+      onQrFlow: (e) => this.setVf({ qrFlow: e.target.value }),
+      startDc: () => this.startDc(),
+      startQr: () => this.startQr(),
+      cancelVerify: () => { this.stopPolling(); this.setVf({ phase: 'idle' }); },
+      resultRef: (el) => { this._resultEl = el; },
+      afterVerify: () => {
+        if (s.verifyNext === 'post') this.go('post', { form: this.blankForm(), editingId: null, formError: '', verifyNext: null });
+        else this.go('home', { verifyNext: null });
+      },
+      toast: s.toast
+    };
+  }
+
+  verifyVals() {
+    const s = this.state, v = s.vf, st = s.idStatus || {};
+    const scen = st.scenarios || {};
+    const rec = st.identity;
+    const dcOk = st.demo || this.dcSupported();
+    const busy = v.phase === 'pending' || v.phase === 'qr';
+    return {
+      demo: !!st.demo, disabled: st.mode === 'disabled',
+      displayName: (s.user && s.user.name) || st.displayName || '',
+      nameDraft: v.nameDraft,
+      recordLabel: rec ? 'Checked ' + new Date(rec.verifiedAt).toLocaleDateString() + ' via ' + (rec.wallet || 'wallet') + (rec.issuer ? ' · issuer: ' + rec.issuer : '') + ' · signature, trusted issuer and expiry passed' : '',
+      showScenarios: !!st.demo && !busy,
+      scenarios: Object.keys(scen).map(k => ({ id: k, label: scen[k] })),
+      scenario: v.scenario,
+      canStart: !!st.mode && st.mode !== 'disabled' && !busy,
+      dcHint: dcOk ? 'Your browser asks your wallet to share your ID. Works in Chrome on Android and Safari on iPhone.' : 'This browser does not support the Digital Credentials API. Use the QR code option.',
+      dcDisabled: !dcOk,
+      dcStyle: 'border: 0; border-radius: 999px; padding: 0 20px; font-size: 15px; font-weight: 700; cursor: ' + (dcOk ? 'pointer' : 'not-allowed') + '; background: ' + (dcOk ? '#990000' : '#D9CFBD') + '; color: ' + (dcOk ? '#FFF8E7' : '#3C3026') + ';',
+      qrFlow: v.qrFlow,
+      isPending: v.phase === 'pending', isQr: v.phase === 'qr', isSuccess: v.phase === 'success',
+      isCancelled: v.phase === 'cancelled', isFailed: v.phase === 'failed',
+      message: v.message, walletUri: v.walletUri, qrSrc: v.qrSrc,
+      nextLabel: s.verifyNext === 'post' ? 'Continue to your listing' : 'Back to the market'
+    };
+  }
+
+  sendCodeAction() {
+    const email = this.state.authEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@usc\.edu$/.test(email)) { this.setState({ authError: 'Use a valid @usc.edu email address.' }); return; }
+    if (!this.api) { this.setState({ authError: 'The Trojan Market server is not reachable. Start it with npm start.' }); return; }
+    this.setState({ authBusy: true, authError: '' });
+    this.post('/api/auth/request', { email: email }).then(r => {
+      if (!r.ok) { this.setState({ authBusy: false, authError: r.data.error || 'Could not send a code.' }); return; }
+      this._focusedInput = null;
+      this.setState({ authBusy: false, authStep: 'code', authEmail: email, authCode: '', demoCode: r.data.demoCode || '' });
+    }).catch(() => this.setState({ authBusy: false, authError: 'Could not reach the server.' }));
+  }
+
+  verifyAction() {
+    const email = this.state.authEmail;
+    this.setState({ authBusy: true, authError: '' });
+    this.post('/api/auth/verify', { email: email, code: this.state.authCode.trim() }).then(r => {
+      if (!r.ok || !r.data.token) { this.setState({ authBusy: false, authError: (r.data && r.data.error) || 'That code is not right.' }); return; }
+      this.token = r.data.token;
+      try { localStorage.setItem('trojan-market-token', r.data.token); } catch (e) {}
+      this.openStream();
+      const pending = this.state.pendingAction;
+      this.persist({ user: r.data.user, authOpen: false, authBusy: false, authError: '', authCode: '', demoCode: '', pendingAction: null });
+      this.notify('Signed in as ' + email);
+      this.refreshState();
+      this.loadIdentity().then(() => { if (pending) pending(); });
+    }).catch(() => this.setState({ authBusy: false, authError: 'Could not reach the server.' }));
+  }
+}
+
+</script>
+</body>
+</html>

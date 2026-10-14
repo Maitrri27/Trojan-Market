@@ -1,0 +1,16 @@
+# runtime state — never committed
+server/db.json
+server/data/
+node_modules/
+
+# ML artifacts and datasets are reproducible outputs, not source
+ml/artifacts/
+ml/datasets/
+ml/fixtures/generated/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# local config
+.env

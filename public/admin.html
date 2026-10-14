@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trojan Market — ML &amp; Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #FDF9F0; color: #241A12; font-family: Inter, system-ui, sans-serif; }
+  a { color: #990000; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 70px; }
+  header { display: flex; align-items: center; gap: 14px; padding-bottom: 22px; border-bottom: 1px solid #EAE1CE; margin-bottom: 28px; flex-wrap: wrap; }
+  .logo { width: 34px; height: 34px; border-radius: 8px; background: #990000; color: #FFC72C; display: grid; place-items: center; font-weight: 900; font-style: italic; font-size: 19px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; color: #7A6B58; font-weight: 500; margin: 34px 0 14px; }
+  input, button { font-family: inherit; font-size: 14px; }
+  input { border: 1px solid #E6DCC7; border-radius: 999px; padding: 10px 16px; background: #FFF; min-width: 240px; }
+  button { border: 0; background: #990000; color: #FFF8E7; border-radius: 999px; padding: 10px 20px; font-weight: 700; cursor: pointer; }
+  button.ghost { background: #FFF; color: #55463A; border: 1px solid #E6DCC7; }
+  .mode { display: inline-flex; align-items: center; gap: 9px; border-radius: 999px; padding: 9px 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; font-weight: 700; }
+  .mode.heuristic { background: #FDF1D2; color: #6E4E00; border: 1px solid #F0C64B; }
+  .mode.shadow { background: #E7EDF5; color: #234; border: 1px solid #B9C8DC; }
+  .mode.active { background: #990000; color: #FFF8E7; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  .card { background: #FFF; border: 1px solid #EAE1CE; border-radius: 14px; padding: 18px 20px; }
+  .card .k { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: #7A6B58; }
+  .card .v { font-size: 27px; font-weight: 800; letter-spacing: -0.02em; margin-top: 6px; }
+  .card .s { font-size: 12.5px; color: #7A6B58; margin-top: 3px; }
+  table { width: 100%; border-collapse: collapse; background: #FFF; border: 1px solid #EAE1CE; border-radius: 14px; overflow: hidden; }
+  th, td { text-align: left; padding: 11px 15px; font-size: 13.5px; border-bottom: 1px solid #F1EAD9; }
+  th { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; color: #7A6B58; font-weight: 500; background: #FBF6EA; }
+  tr:last-child td { border-bottom: 0; }
+  .bar { height: 7px; background: #EFE7D7; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .bar span { display: block; height: 100%; background: #990000; }
+  .pass { color: #2F5D3A; font-weight: 700; }
+  .fail { color: #8A1414; font-weight: 700; }
+  .note { background: #FDF1D2; border: 1px dashed #F0C64B; border-radius: 12px; padding: 16px 18px; font-size: 14px; line-height: 1.55; color: #453729; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: #F4EEE1; padding: 2px 6px; border-radius: 5px; }
+  #err { color: #8A1414; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">T</div>
+    <h1>ML &amp; Analytics</h1>
+    <div style="flex:1"></div>
+    <input id="token" placeholder="Admin bearer token" />
+    <button onclick="load()">Load</button>
+    <button class="ghost" onclick="location.href='/'">App</button>
+  </header>
+  <div id="err"></div>
+  <div id="out"></div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s === null || s === undefined ? '—' : s).replace(/[<>&]/g, (c) => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+const pct = (v) => v === null || v === undefined ? '—' : (v * 100).toFixed(2) + '%';
+const num = (v) => v === null || v === undefined ? '—' : Number(v).toLocaleString();
+
+function card(k, v, s) {
+  return '<div class="card"><div class="k">' + k + '</div><div class="v">' + v + '</div>' +
+    (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
+}
+
+async function load() {
+  const token = $('#token').value.trim();
+  localStorage.setItem('tm-admin-token', token);
+  $('#err').textContent = '';
+  let d;
+  try {
+    const r = await fetch('/api/admin/overview', { headers: { Authorization: 'Bearer ' + token } });
+    d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'request failed');
+  } catch (e) {
+    $('#err').textContent = 'Could not load: ' + e.message + '. Set TM_ADMINS to your usc.edu address, sign in, and paste the token.';
+    $('#out').innerHTML = '';
+    return;
+  }
+  render(d);
+}
+
+function render(d) {
+  const mode = d.recommendation_mode;
+  const cls = mode === 'ml_active' ? 'active' : mode === 'shadow_ml' ? 'shadow' : 'heuristic';
+  const label = mode === 'ml_active' ? 'ML ACTIVE' : mode === 'shadow_ml' ? 'SHADOW ML' : 'HEURISTIC';
+  const m = d.marketplace, e = d.events, f = d.funnel, ml = d.ml;
+  const dr = ml.dataset_readiness;
+  let h = '';
+
+  h += '<div class="mode ' + cls + '">CURRENT RECOMMENDATION MODE — ' + label + '</div>';
+
+  if (mode === 'heuristic') {
+    h += '<div class="note" style="margin-top:16px"><strong>No ML model is serving traffic.</strong> ' +
+      'This is the correct state until real behavioural data clears the confidence gates below. ' +
+      'Ranking comes from the transparent heuristic, which never goes away — it stays the fallback ' +
+      'for every inference failure, timeout and cold-start user.</div>';
+  }
+
+  h += '<h2>MARKETPLACE</h2><div class="grid">' +
+    card('LISTINGS', num(m.listings), num(m.live_listings) + ' live') +
+    card('USERS', num(m.users)) +
+    card('CONVERSATIONS', num(m.conversations)) +
+    card('TRANSACTIONS', num(m.transactions)) +
+    card('OPEN REPORTS', num(m.open_reports)) + '</div>';
+
+  h += '<h2>EVENT COLLECTION</h2><div class="grid">' +
+    card('TOTAL EVENTS', num(e.total)) +
+    card('IMPRESSIONS', num(f.impressions)) +
+    card('UNIQUE USERS', num(e.unique_users)) +
+    card('UNIQUE SESSIONS', num(e.unique_sessions)) + '</div>';
+
+  h += '<h2>ENGAGEMENT FUNNEL</h2><div class="grid">' +
+    card('CTR', pct(f.ctr), num(f.clicks) + ' clicks') +
+    card('SAVE RATE', pct(f.save_rate), num(f.saves) + ' saves') +
+    card('MESSAGE RATE', pct(f.message_rate), num(f.messages) + ' messages') +
+    card('TRANSACTION RATE', pct(f.transaction_rate), num(f.transactions) + ' transactions') + '</div>';
+
+  h += '<h2>TRAINING DATA READINESS — ' + pct(dr.progress) + '</h2>';
+  h += '<div class="bar"><span style="width:' + (dr.progress * 100).toFixed(1) + '%"></span></div>';
+  h += '<table style="margin-top:14px"><tr><th>GATE</th><th>COLLECTED</th><th>REQUIRED</th><th>STATUS</th></tr>';
+  Object.keys(dr.checks).forEach((k) => {
+    const c = dr.checks[k];
+    h += '<tr><td>' + k.replace(/_/g, ' ') + '</td><td>' + num(c.actual) + '</td><td>' + num(c.required) +
+      '</td><td class="' + (c.satisfied ? 'pass' : 'fail') + '">' + (c.satisfied ? 'MET' : 'PENDING') + '</td></tr>';
+  });
+  h += '</table>';
+
+  h += '<h2>MODEL</h2>';
+  if (ml.active_model) {
+    const a = ml.active_model, met = a.metrics || {};
+    h += '<div class="grid">' +
+      card('VERSION', esc(a.version)) +
+      card('NDCG@5', met['ndcg@5'] || '—') +
+      card('NDCG@10', met['ndcg@10'] || '—') +
+      card('MRR', met.mrr || '—') +
+      card('LIFT vs HEURISTIC', met.ndcg_lift_over_baseline || '—', 'heuristic ' + (met['heuristic_baseline_ndcg@10'] || '—')) +
+      card('TRAINED', esc(String(a.training_timestamp || '').slice(0, 10))) + '</div>';
+  } else {
+    h += '<div class="note">No model registered. Once the gates above are met: ' +
+      '<code>npm run ml:retrain</code></div>';
+  }
+
+  const sc = ml.shadow_comparison;
+  h += '<h2>SHADOW COMPARISON</h2>';
+  if (sc.samples) {
+    h += '<div class="grid">' +
+      card('SAMPLES', num(sc.samples)) +
+      card('TOP-1 AGREEMENT', pct(sc.top1_agreement)) +
+      card('TOP-5 OVERLAP', pct(sc.top5_overlap)) +
+      card('MODEL', esc(sc.model_version)) + '</div>';
+  } else {
+    h += '<div class="note">' + esc(sc.note) + '</div>';
+  }
+
+  h += '<h2>OTHER PIPELINES</h2><table><tr><th>PIPELINE</th><th>COLLECTED</th><th>MINIMUM</th><th>STATUS</th></tr>';
+  Object.keys(d.pipelines).forEach((k) => {
+    const p = d.pipelines[k];
+    const ready = p.collected >= p.minimum;
+    h += '<tr><td>' + k.replace(/_/g, ' ') + '</td><td>' + num(p.collected) + '</td><td>' + num(p.minimum) +
+      '</td><td class="' + (ready ? 'pass' : 'fail') + '">' + (ready ? 'READY' : 'COLLECTING') + '</td></tr>';
+  });
+  h += '</table>';
+
+  const lat = (d.observability && d.observability.latency) || {};
+  const keys = Object.keys(lat).filter((k) => k.indexOf('recommendations') >= 0 || k.indexOf('ml.') >= 0 || k.indexOf('db.') >= 0);
+  if (keys.length) {
+    h += '<h2>LATENCY</h2><table><tr><th>OPERATION</th><th>CALLS</th><th>P50</th><th>P95</th><th>MAX</th></tr>';
+    keys.forEach((k) => {
+      const t = lat[k];
+      h += '<tr><td>' + esc(k) + '</td><td>' + num(t.count) + '</td><td>' + t.p50_ms + 'ms</td><td>' +
+        t.p95_ms + 'ms</td><td>' + t.max_ms + 'ms</td></tr>';
+    });
+    h += '</table>';
+  }
+
+  $('#out').innerHTML = h;
+}
+
+$('#token').value = localStorage.getItem('tm-admin-token') || '';
+if ($('#token').value) load();
+</script>
+</body>
+</html>

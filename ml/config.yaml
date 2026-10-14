@@ -1,0 +1,84 @@
+# Single source of truth for the offline pipeline.
+# The Node service reads the SAME gate values from server/lib/config.js —
+# keep them aligned (or drive both from environment variables).
+
+paths:
+  event_log: server/data/events.jsonl
+  db: server/db.json
+  datasets: ml/datasets
+  artifacts: ml/artifacts
+  registry: ml/artifacts/registry.json
+
+dataset:
+  version: v1
+  min_impressions_per_group: 2
+  max_impressions_per_group: 60
+  # An engagement counts for an impression if it happened within this many
+  # seconds after it, in the same session.
+  attribution_window_s: 1800
+
+labels:
+  # Graded relevance. Editable here WITHOUT touching raw events.
+  impression: 0
+  click: 1
+  detail_view: 1
+  dwell_30s: 1
+  save: 2
+  share: 2
+  message_sent: 3
+  reply_received: 3
+  offer_sent: 3
+  offer_accepted: 4
+  meetup_agreed: 4
+  transaction_confirmed: 4
+  marked_sold: 4
+  marked_rented: 4
+  visibility:
+    above_fold_rank: 6
+    seen_weight: 1.0
+    below_fold_weight: 0.25
+    explicit_skip_weight: 1.5
+
+features:
+  version: rec_features_v1
+  half_life_days: 14
+
+split:
+  # STRICTLY chronological. Random splitting leaks the future into the past.
+  method: time
+  train_frac: 0.7
+  valid_frac: 0.15
+  test_frac: 0.15
+
+training:
+  objective: lambdarank
+  metric: ndcg
+  eval_at: [5, 10]
+  num_leaves: 31
+  learning_rate: 0.05
+  min_data_in_leaf: 20
+  feature_fraction: 0.9
+  bagging_fraction: 0.8
+  bagging_freq: 5
+  num_boost_round: 500
+  early_stopping_rounds: 50
+  lambdarank_truncation_level: 20
+  seed: 42
+
+gates:
+  # A model failing ANY gate is registered as 'rejected' and never serves.
+  minimum_training_examples: 50000
+  minimum_unique_users: 300
+  minimum_unique_sessions: 2000
+  minimum_positive_events: 2000
+  minimum_test_score: 0.30
+  minimum_improvement_over_baseline: 0.02
+
+housing_pairwise:
+  minimum_decisive_pairs: 5000
+  minimum_users: 200
+  l2_regularisation: 1.0
+
+fraud:
+  minimum_labels: 1000
+  minimum_positives: 100

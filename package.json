@@ -1,0 +1,31 @@
+{
+  "name": "trojan-market",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Trojan Market — USC student marketplace with an ML-ready recommendation pipeline",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node tests/run.js",
+    "reset": "node -e \"require('fs').rmSync('server/db.json',{force:true});console.log('db reset (event log preserved — it is append-only)')\"",
+    "reset:events": "node -e \"require('fs').rmSync('server/data/events.jsonl',{force:true});console.log('EVENT LOG DELETED — training data is unrecoverable')\"",
+    "ml:export": "node ml/export_house_detail.js",
+    "ml:dataset": "python ml/data/build_recommendation_dataset.py",
+    "ml:train": "python ml/training/train_ranker.py",
+    "ml:evaluate": "python ml/evaluation/evaluate_ranker.py",
+    "ml:registry": "python ml/registry/registry.py --list",
+    "ml:serve": "python ml/serve/inference_api.py --port 8500",
+    "ml:retrain": "bash ml/retrain.sh",
+    "ml:housing": "python ml/housing/train_pairwise.py",
+    "ml:fraud": "python ml/fraud/train_fraud_classifier.py",
+    "dev:mongo": "TM_MONGO_URI=mongodb://localhost:27017 node server/index.js",
+    "test:mongo": "TM_MONGO_URI=mongodb://localhost:27017 TM_MONGO_DB=trojan_market_test node tests/run.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  }
+}
